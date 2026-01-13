@@ -4,134 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin HQ - Nearby Bazar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-        :root {
-            --primary: #6c5ce7;
-            --secondary: #a29bfe;
-            --success: #00b894;
-            --danger: #d63031;
-            --bg: #dfe6e9;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg);
-            padding-bottom: 80px;
-        }
-
-        /* Top Bar */
+        body { background-color: #f0f2f5; font-family: sans-serif; padding-bottom: 80px; }
+        
+        /* Header */
         .top-bar {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            background: #fff; padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .page-title { font-weight: 600; font-size: 1.2rem; color: #2d3436; margin: 0; }
-
-        /* Stats Cards */
-        .stat-card {
-            background: white;
-            border: none;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .stat-card:active { transform: scale(0.98); }
-        .stat-num { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
-        .stat-label { font-size: 0.8rem; color: #636e72; }
-
-        /* Request Cards (Better than Tables) */
+        
+        /* Cards */
+        .stat-card { background: #fff; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-num { font-size: 24px; font-weight: bold; color: #6c5ce7; }
+        
+        /* Request List */
         .req-card {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--primary);
-            position: relative;
+            background: #fff; padding: 15px; border-radius: 12px;
+            margin-bottom: 10px; border-left: 5px solid #ff9f43;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .req-header { display: flex; justify-content: space-between; align-items: center; }
-        .shop-name { font-weight: bold; font-size: 1.1rem; }
-        .owner-name { color: #636e72; font-size: 0.9rem; }
-        
-        .action-area {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-custom {
-            flex: 1;
-            border-radius: 10px;
-            padding: 10px;
-            border: none;
-            font-weight: 600;
-        }
-        .btn-accept { background-color: var(--success); color: white; }
-        .btn-reject { background-color: var(--danger); color: white; }
+        .btn-action { width: 48%; border-radius: 8px; font-weight: bold; }
 
         /* Map */
-        #map { height: 300px; width: 100%; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #map { height: 300px; border-radius: 15px; margin-bottom: 20px; }
 
         /* Bottom Nav */
         .bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2d3436;
-            padding: 10px 20px;
-            border-radius: 30px;
-            display: flex;
-            gap: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            z-index: 1000;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #2d3436; padding: 10px 25px; border-radius: 30px;
+            display: flex; gap: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 2000;
         }
-        .nav-icon { color: rgba(255,255,255,0.6); font-size: 1.2rem; padding: 10px; border-radius: 50%; transition: 0.3s; }
-        .nav-icon.active { background: var(--primary); color: white; transform: translateY(-5px); }
-
-        /* Toast Notification */
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 50px;
-            padding: 16px;
-            position: fixed;
-            z-index: 2000;
-            left: 50%;
-            bottom: 90px;
-            transform: translateX(-50%);
-            font-size: 14px;
-        }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 90px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 90px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        .nav-icon { color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer; }
+        .nav-icon.active { color: #fff; transform: scale(1.2); }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <h4 class="page-title">Admin Dashboard</h4>
-        <div class="badge bg-danger rounded-pill" id="pending-badge">0 New</div>
+        <h5 class="m-0">⚡ Admin Panel</h5>
+        <span class="badge bg-danger rounded-pill" id="pending-badge">0 New</span>
     </div>
 
     <div class="container mt-4">
@@ -141,45 +59,38 @@
                 <div class="col-6">
                     <div class="stat-card">
                         <div class="stat-num" id="total-shops">0</div>
-                        <div class="stat-label">Total Shops</div>
+                        <small>Total Shops</small>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="stat-card">
-                        <div class="stat-num text-success">₹0</div>
-                        <div class="stat-label">Revenue</div>
+                        <div class="stat-num text-success" id="total-revenue">₹0</div>
+                        <small>Revenue</small>
                     </div>
                 </div>
             </div>
-            
-            <h6 class="text-muted mt-2 mb-3">📍 Live Market View</h6>
             <div id="map"></div>
         </div>
 
-        <div id="view-approvals" style="display: none;">
+        <div id="view-approvals" style="display:none;">
             <h5 class="mb-3">Pending Requests</h5>
-            <div id="approvals-list">
-                <div class="text-center text-muted mt-5">
-                    <i class="fas fa-check-circle fa-3x mb-3" style="color: #b2bec3;"></i>
-                    <p>All clean! No pending requests.</p>
-                </div>
+            <div id="approval-list">
+                <p class="text-center text-muted mt-5">No pending requests</p>
             </div>
         </div>
 
-        <div id="view-shops" style="display: none;">
-            <h5 class="mb-3">Active Shops Database</h5>
+        <div id="view-settings" style="display:none;">
+            <h5 class="mb-3">All Shops</h5>
             <div id="shops-list"></div>
         </div>
 
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-icon active" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i></div>
-        <div class="nav-icon" onclick="switchView('approvals', this)"><i class="fas fa-tasks"></i></div>
-        <div class="nav-icon" onclick="switchView('shops', this)"><i class="fas fa-store"></i></div>
+        <i class="fas fa-home nav-icon active" onclick="switchView('dashboard', this)"></i>
+        <i class="fas fa-tasks nav-icon" onclick="switchView('approvals', this)"></i>
+        <i class="fas fa-store nav-icon" onclick="switchView('settings', this)"></i>
     </div>
-
-    <div id="toast">Operation Successful!</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
@@ -198,19 +109,17 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Map Setup
-        var map = L.map('map').setView([20.5937, 78.9629], 5);
+        // Map Init
+        var map = L.map('map').setView([20.5937, 78.9629], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // --- Realtime Listener ---
-        const shopsRef = collection(db, "shops");
-        
-        onSnapshot(shopsRef, (snapshot) => {
+        // --- REALTIME DATA ---
+        onSnapshot(collection(db, "shops"), (snapshot) => {
             let total = 0, pending = 0;
-            let approvalHtml = "";
-            let shopsHtml = "";
+            let approvalHTML = "";
+            let shopsHTML = "";
 
-            // Reset Map
+            // Clear Markers
             map.eachLayer((layer) => { if(layer instanceof L.Marker) map.removeLayer(layer); });
 
             snapshot.forEach((docSnap) => {
@@ -218,88 +127,64 @@
                 const id = docSnap.id;
                 total++;
 
-                // Map Pins (Only Verified)
-                if(data.status === "verified" && data.lat) {
-                    L.marker([data.lat, data.lng]).addTo(map).bindPopup(`<b>${data.shopName}</b>`);
+                // Map Logic
+                if(data.status === 'verified' && data.lat) {
+                    L.marker([data.lat, data.lng]).addTo(map).bindPopup(data.shopName);
                 }
 
-                // 1. Pending Approvals (Cards Design)
-                if(data.status === "pending") {
+                // Approval List Logic
+                if(data.status === 'pending') {
                     pending++;
-                    approvalHtml += `
+                    approvalHTML += `
                     <div class="req-card">
-                        <div class="req-header">
-                            <div>
-                                <div class="shop-name">${data.shopName}</div>
-                                <div class="owner-name">👤 ${data.ownerName} | 📞 ${data.phone}</div>
-                            </div>
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        </div>
-                        <div class="action-area">
-                            <button class="btn-custom btn-accept" onclick="updateShop('${id}', 'verified')">✅ Accept</button>
-                            <button class="btn-custom btn-reject" onclick="updateShop('${id}', 'rejected')">❌ Reject</button>
+                        <h5>${data.shopName}</h5>
+                        <p class="mb-2 text-muted">👤 ${data.ownerName} | 📞 ${data.phone}</p>
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-success btn-action" onclick="window.handleShop('${id}', 'verified')">Accept</button>
+                            <button class="btn btn-danger btn-action" onclick="window.handleShop('${id}', 'rejected')">Reject</button>
                         </div>
                     </div>`;
                 }
 
-                // 2. Active Shops List
-                shopsHtml += `
-                <div class="req-card" style="border-left-color: ${data.status=='verified'?'#00b894':'#d63031'}">
-                    <div class="req-header">
-                        <div>
-                            <div class="shop-name">${data.shopName}</div>
-                            <div class="owner-name">Status: ${data.status.toUpperCase()}</div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-dark" onclick="updateShop('${id}', '${data.status=='suspended'?'verified':'suspended'}')">
-                            ${data.status=='suspended'?'Unban':'Ban'}
-                        </button>
+                // All Shops List
+                shopsHTML += `
+                <div class="req-card" style="border-left: 5px solid ${data.status=='verified'?'green':'red'}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${data.shopName}</strong>
+                        <span class="badge bg-${data.status=='verified'?'success':'secondary'}">${data.status}</span>
                     </div>
                 </div>`;
             });
 
-            // Update DOM
+            // Update UI
             document.getElementById("total-shops").innerText = total;
-            document.getElementById("pending-badge").innerText = pending > 0 ? pending + " New" : "0";
-            if(pending > 0) document.getElementById("approvals-list").innerHTML = approvalHtml;
-            document.getElementById("shops-list").innerHTML = shopsHtml;
+            document.getElementById("pending-badge").innerText = pending + " New";
+            if(pending > 0) document.getElementById("approval-list").innerHTML = approvalHTML;
+            document.getElementById("shops-list").innerHTML = shopsHTML;
         });
 
-        // --- Global Functions (Window Scope) ---
-        window.updateShop = async (id, status) => {
-            // Show smooth loading effect (optional)
-            showToast(status === 'verified' ? "Approving Shop..." : "Updating Status...");
-            
+        // --- GLOBAL FUNCTIONS (Must be attached to window) ---
+        
+        window.handleShop = async (id, status) => {
+            if(!confirm("Are you sure?")) return;
             try {
                 await updateDoc(doc(db, "shops", id), { status: status });
-                showToast("✅ Success! Status Updated.");
-            } catch (e) {
-                showToast("❌ Error: " + e.message);
+                alert("Status Updated!");
+            } catch(e) {
+                alert("Error: " + e.message);
             }
         };
 
-        // --- UI Logic ---
-        window.switchView = (viewId, btn) => {
-            // Hide all
-            document.getElementById('view-dashboard').style.display = 'none';
-            document.getElementById('view-approvals').style.display = 'none';
-            document.getElementById('view-shops').style.display = 'none';
+        window.switchView = (view, btn) => {
+            document.getElementById("view-dashboard").style.display = "none";
+            document.getElementById("view-approvals").style.display = "none";
+            document.getElementById("view-settings").style.display = "none";
             
-            // Remove active class from nav
-            document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll(".nav-icon").forEach(el => el.classList.remove("active"));
             
-            // Show selected
-            document.getElementById('view-' + viewId).style.display = 'block';
-            btn.classList.add('active');
-        }
-
-        // Custom Toast Function
-        function showToast(msg) {
-            const x = document.getElementById("toast");
-            x.innerText = msg;
-            x.className = "show";
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-        }
+            document.getElementById("view-" + view).style.display = "block";
+            btn.classList.add("active");
+        };
     </script>
-
 </body>
 </html>
