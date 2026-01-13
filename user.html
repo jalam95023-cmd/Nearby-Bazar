@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Now - Nearby Bazar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; overflow-x: hidden; }
+        
+        /* Full Screen Map */
+        #map { height: 60vh; width: 100%; z-index: 1; }
+        
+        /* Bottom Sheet (Shop Menu) */
+        .sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0;
+            background: white; border-radius: 20px 20px 0 0;
+            height: 80vh; transition: 0.3s ease-out; z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            padding: 20px; overflow-y: auto;
+        }
+        .sheet.active { bottom: 0; }
+        
+        /* Floating Search Bar */
+        .search-bar {
+            position: absolute; top: 20px; left: 5%; width: 90%;
+            z-index: 999; background: white; padding: 10px;
+            border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center;
+        }
+        
+        /* Cart Item */
+        .menu-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid #eee;
+        }
+        
+        /* Floating Cart Button */
+        .cart-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #e67e22; color: white;
+            padding: 15px 20px; border-radius: 30px;
+            font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none; z-index: 1100;
+        }
+
+        /* Login Modal Overlay */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="card p-4 text-center" style="width: 85%;">
+            <h3>👋 Welcome!</h3>
+            <p>Enter your name to start ordering</p>
+            <input type="text" id="cusName" class="form-control mb-3" placeholder="Your Name">
+            <button class="btn btn-warning w-100" onclick="saveUser()">Start Shopping</button>
+        </div>
+    </div>
+
+    <div class="search-bar">
+        <i class="fas fa-search text-muted me-2"></i>
+        <input type="text" style="border:none; outline:none; width:100%;" placeholder="Search for chips, milk...">
+    </div>
+    <div id="map"></div>
+
+    <div id="shop-sheet" class="sheet">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 id="sheet-shop-name">Shop Name</h3>
+            <button class="btn btn-sm btn-light rounded-circle" onclick="closeSheet()">✕</button>
+        </div>
+        <p class="text-muted small">Select items to add to cart</p>
+        
+        <div id="menu-list">
+            <div class="text-center mt-5"><div class="spinner-border text-warning"></div></div>
+        </div>
+        
+        <div style="height: 60px;"></div> </div>
+
+    <button id="cart-btn" class="cart-btn" onclick="placeOrder()">
+        Place Order <span id="cart-total">₹0</span>
+    </button>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
+            authDomain: "nearby-bazar.firebaseapp.com",
+            projectId: "nearby-bazar",
+            storageBucket: "nearby-bazar.firebasestorage.app",
+            messagingSenderId: "183262510084",
+            appId: "1:183262510084:web:909fa3aac2f2429a7d8951"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // State
+        let currentShopId = null;
+        let cart = [];
+        let total = 0;
+        let userName = localStorage.getItem("userName");
+
+        // Auth Check
+        if(userName) {
+            document.getElementById("login-overlay").style.display = "none";
+        }
+
+        window.saveUser = () => {
+            const name = document.getElementById("cusName").value;
+            if(name) {
+                localStorage.setItem("userName", name);
+                userName = name;
+                document.getElementById("login-overlay").style.display = "none";
+            }
+        };
+
+        // Map Setup
+        var map = L.map('map').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Geolocation
+        navigator.geolocation.getCurrentPosition(pos => {
+            map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+            L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(map)
+             .bindPopup("You are here").openPopup();
+        });
+
+        // Load Verified Shops
+        onSnapshot(collection(db, "shops"), (snapshot) => {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if(data.status === 'verified' && data.lat) {
+                    const marker = L.marker([data.lat, data.lng]).addTo(map);
+                    marker.bindPopup(`<b>${data.shopName}</b><br>Click to View Items`);
+                    marker.on('click', () => openShop(doc.id, data.shopName));
+                }
+            });
+        });
+
+        // Open Shop Menu
+        window.openShop = async (shopId, shopName) => {
+            currentShopId = shopId;
+            document.getElementById("sheet-shop-name").innerText = shopName;
+            document.getElementById("shop-sheet").classList.add("active");
+            cart = []; // Clear old cart
+            updateCartUI();
+
+            const menuList = document.getElementById("menu-list");
+            menuList.innerHTML = "Loading items...";
+            
+            const querySnapshot = await getDocs(collection(db, `shops/${shopId}/inventory`));
+            let html = "";
+            
+            if(querySnapshot.empty) {
+                html = "<p>No items added by shopkeeper yet.</p>";
+            }
+
+            querySnapshot.forEach(doc => {
+                const item = doc.data();
+                html += `
+                <div class="menu-item">
+                    <div>
+                        <h6 class="mb-0">${item.name}</h6>
+                        <small class="text-muted">₹${item.price}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-success" onclick="addToCart('${item.name}', ${item.price})">ADD +</button>
+                </div>`;
+            });
+            
+            menuList.innerHTML = html;
+        };
+
+        window.closeSheet = () => {
+            document.getElementById("shop-sheet").classList.remove("active");
+        }
+
+        // Cart Logic
+        window.addToCart = (name, price) => {
+            cart.push({ name, price });
+            total += parseInt(price);
+            updateCartUI();
+        };
+
+        function updateCartUI() {
+            if(cart.length > 0) {
+                document.getElementById("cart-btn").style.display = "block";
+                document.getElementById("cart-total").innerText = " | ₹" + total;
+            } else {
+                document.getElementById("cart-btn").style.display = "none";
+            }
+        }
+
+        // Place Order Logic
+        window.placeOrder = async () => {
+            if(!confirm(`Place order for ₹${total}?`)) return;
+
+            const btn = document.getElementById("cart-btn");
+            btn.innerText = "Processing...";
+
+            try {
+                await addDoc(collection(db, "orders"), {
+                    shopId: currentShopId,
+                    customerName: userName,
+                    items: cart,
+                    totalAmount: total,
+                    status: "new", // 'new' triggers shop alert
+                    timestamp: new Date()
+                });
+                
+                alert("✅ Order Placed Successfully!");
+                closeSheet();
+                cart = [];
+                total = 0;
+                updateCartUI();
+                btn.innerText = "Place Order";
+                
+            } catch (e) {
+                alert("Error: " + e.message);
+                btn.innerText = "Try Again";
+            }
+        };
+    </script>
+</body>
+</html>
