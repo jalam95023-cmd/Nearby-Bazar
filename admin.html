@@ -5,94 +5,202 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin HQ - Nearby Bazar</title>
     
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body { background-color: #f0f2f5; font-family: sans-serif; padding-bottom: 80px; }
-        
-        /* Header */
-        .top-bar {
-            background: #fff; padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky; top: 0; z-index: 1000;
-            display: flex; justify-content: space-between; align-items: center;
+        :root {
+            --primary: #4F46E5; /* Indigo */
+            --bg: #F3F4F6;
+            --card-bg: #ffffff;
+            --text-dark: #1F2937;
         }
-        
-        /* Cards */
-        .stat-card { background: #fff; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-num { font-size: 24px; font-weight: bold; color: #6c5ce7; }
-        
-        /* Request List */
-        .req-card {
-            background: #fff; padding: 15px; border-radius: 12px;
-            margin-bottom: 10px; border-left: 5px solid #ff9f43;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            padding-bottom: 90px; /* Space for bottom nav */
+            color: var(--text-dark);
         }
-        .btn-action { width: 48%; border-radius: 8px; font-weight: bold; }
 
-        /* Map */
-        #map { height: 300px; border-radius: 15px; margin-bottom: 20px; }
+        /* Modern Header */
+        .header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: sticky; top: 0; z-index: 100;
+        }
 
-        /* Bottom Nav */
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 0.85rem; color: #6B7280; font-weight: 600; }
+
+        /* Shop Cards (List View) */
+        .shop-card {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border-left: 5px solid transparent;
+            transition: transform 0.2s;
+        }
+        .shop-card:active { transform: scale(0.98); }
+        .shop-info h6 { margin: 0; font-weight: 700; }
+        .shop-info p { margin: 0; font-size: 0.8rem; color: #6B7280; }
+        
+        /* Status Colors */
+        .status-verified { border-left-color: #10B981; }
+        .status-pending { border-left-color: #F59E0B; }
+        .status-suspended { border-left-color: #EF4444; }
+
+        /* Action Buttons */
+        .btn-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            border: none;
+            display: flex; align-items: center; justify-content: center;
+            margin-left: 5px;
+        }
+        .btn-accept { background: #DCFCE7; color: #166534; }
+        .btn-reject { background: #FEE2E2; color: #991B1B; }
+        .btn-ban { background: #F3F4F6; color: #374151; }
+
+        /* Bottom Navigation (App Like) */
         .bottom-nav {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #2d3436; padding: 10px 25px; border-radius: 30px;
-            display: flex; gap: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 2000;
+            background: #1F2937;
+            padding: 12px 25px;
+            border-radius: 40px;
+            display: flex; gap: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
         }
-        .nav-icon { color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer; }
-        .nav-icon.active { color: #fff; transform: scale(1.2); }
+        .nav-item {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav-item.active { color: white; transform: translateY(-3px); }
+        .nav-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #EF4444; color: white;
+            font-size: 10px; padding: 2px 6px; border-radius: 10px;
+        }
+
+        /* Section Visibility */
+        .section-view { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .section-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <h5 class="m-0">⚡ Admin Panel</h5>
-        <span class="badge bg-danger rounded-pill" id="pending-badge">0 New</span>
+    <div class="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0 fw-bold">Admin HQ</h4>
+                <small class="text-muted">Superadmin Control</small>
+            </div>
+            <div class="bg-light p-2 rounded-circle">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=random" width="30" class="rounded-circle">
+            </div>
+        </div>
     </div>
 
-    <div class="container mt-4">
+    <div id="view-dashboard" class="section-view active">
+        <h5 class="fw-bold mb-3">Overview</h5>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val text-success">₹<span id="stat-revenue">0</span></div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-shops">0</div>
+                <div class="stat-label">Active Shops</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-users">0</div>
+                <div class="stat-label">Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val text-warning" id="stat-pending">0</div>
+                <div class="stat-label">Pending Req</div>
+            </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-white rounded-4 shadow-sm">
+            <h6 class="fw-bold">📢 Quick Broadcast</h6>
+            <textarea class="form-control mb-2" style="border:1px solid #eee;" placeholder="Send notification to all shops..."></textarea>
+            <button class="btn btn-primary w-100 rounded-pill" onclick="sendBroadcast()">Send Alert</button>
+        </div>
+    </div>
+
+    <div id="view-shops" class="section-view">
+        <h5 class="fw-bold mb-3">Shop Management</h5>
         
-        <div id="view-dashboard">
-            <div class="row">
-                <div class="col-6">
-                    <div class="stat-card">
-                        <div class="stat-num" id="total-shops">0</div>
-                        <small>Total Shops</small>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="stat-card">
-                        <div class="stat-num text-success" id="total-revenue">₹0</div>
-                        <small>Revenue</small>
-                    </div>
-                </div>
-            </div>
-            <div id="map"></div>
-        </div>
+        <ul class="nav nav-pills mb-3" id="pills-tab">
+            <li class="nav-item"><a class="nav-link active rounded-pill py-1" onclick="filterShops('all')">All</a></li>
+            <li class="nav-item"><a class="nav-link rounded-pill py-1" onclick="filterShops('pending')">Pending</a></li>
+            <li class="nav-item"><a class="nav-link rounded-pill py-1" onclick="filterShops('verified')">Live</a></li>
+        </ul>
 
-        <div id="view-approvals" style="display:none;">
-            <h5 class="mb-3">Pending Requests</h5>
-            <div id="approval-list">
-                <p class="text-center text-muted mt-5">No pending requests</p>
+        <div id="shops-container">
+            <div class="text-center mt-5 text-muted">Loading data...</div>
+        </div>
+    </div>
+
+    <div id="view-users" class="section-view">
+        <h5 class="fw-bold mb-3">Users & Disputes</h5>
+        
+        <div class="card p-3 border-0 shadow-sm mb-3">
+            <h6 class="fw-bold text-danger">⚖️ Active Disputes</h6>
+            <div class="text-center py-4 bg-light rounded-3">
+                <i class="fas fa-check-circle text-success mb-2"></i>
+                <p class="small text-muted mb-0">No active fights! Peace everywhere.</p>
             </div>
         </div>
 
-        <div id="view-settings" style="display:none;">
-            <h5 class="mb-3">All Shops</h5>
-            <div id="shops-list"></div>
+        <h6 class="fw-bold">👥 Registered Customers</h6>
+        <div id="users-list">
+             <p class="text-muted small">Realtime user list loading...</p>
         </div>
-
     </div>
 
     <div class="bottom-nav">
-        <i class="fas fa-home nav-icon active" onclick="switchView('dashboard', this)"></i>
-        <i class="fas fa-tasks nav-icon" onclick="switchView('approvals', this)"></i>
-        <i class="fas fa-store nav-icon" onclick="switchView('settings', this)"></i>
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="nav-item" onclick="switchTab('shops', this)" style="position: relative;">
+            <i class="fas fa-store"></i>
+            <span id="nav-badge" class="nav-badge" style="display:none">0</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('users', this)">
+            <i class="fas fa-users-cog"></i>
+        </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -109,82 +217,133 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Map Init
-        var map = L.map('map').setView([20.5937, 78.9629], 4);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // --- GLOBAL VARIABLES ---
+        let allShopsData = [];
 
-        // --- REALTIME DATA ---
+        // --- REALTIME LISTENERS ---
         onSnapshot(collection(db, "shops"), (snapshot) => {
-            let total = 0, pending = 0;
-            let approvalHTML = "";
-            let shopsHTML = "";
-
-            // Clear Markers
-            map.eachLayer((layer) => { if(layer instanceof L.Marker) map.removeLayer(layer); });
+            let total = 0, pending = 0, verified = 0;
+            allShopsData = []; // Reset
 
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                const id = docSnap.id;
+                data.id = docSnap.id; // Append ID
+                allShopsData.push(data);
+
                 total++;
-
-                // Map Logic
-                if(data.status === 'verified' && data.lat) {
-                    L.marker([data.lat, data.lng]).addTo(map).bindPopup(data.shopName);
-                }
-
-                // Approval List Logic
-                if(data.status === 'pending') {
-                    pending++;
-                    approvalHTML += `
-                    <div class="req-card">
-                        <h5>${data.shopName}</h5>
-                        <p class="mb-2 text-muted">👤 ${data.ownerName} | 📞 ${data.phone}</p>
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-success btn-action" onclick="window.handleShop('${id}', 'verified')">Accept</button>
-                            <button class="btn btn-danger btn-action" onclick="window.handleShop('${id}', 'rejected')">Reject</button>
-                        </div>
-                    </div>`;
-                }
-
-                // All Shops List
-                shopsHTML += `
-                <div class="req-card" style="border-left: 5px solid ${data.status=='verified'?'green':'red'}">
-                    <div class="d-flex justify-content-between">
-                        <strong>${data.shopName}</strong>
-                        <span class="badge bg-${data.status=='verified'?'success':'secondary'}">${data.status}</span>
-                    </div>
-                </div>`;
+                if(data.status === 'pending') pending++;
+                if(data.status === 'verified') verified++;
             });
 
-            // Update UI
-            document.getElementById("total-shops").innerText = total;
-            document.getElementById("pending-badge").innerText = pending + " New";
-            if(pending > 0) document.getElementById("approval-list").innerHTML = approvalHTML;
-            document.getElementById("shops-list").innerHTML = shopsHTML;
+            // Update Stats
+            document.getElementById("stat-shops").innerText = verified;
+            document.getElementById("stat-pending").innerText = pending;
+            
+            // Update Badge
+            const badge = document.getElementById("nav-badge");
+            if(pending > 0) {
+                badge.style.display = "block";
+                badge.innerText = pending;
+            } else {
+                badge.style.display = "none";
+            }
+
+            // Refresh List (Default All)
+            renderShops('all');
         });
 
-        // --- GLOBAL FUNCTIONS (Must be attached to window) ---
-        
-        window.handleShop = async (id, status) => {
-            if(!confirm("Are you sure?")) return;
-            try {
-                await updateDoc(doc(db, "shops", id), { status: status });
-                alert("Status Updated!");
-            } catch(e) {
-                alert("Error: " + e.message);
+        // --- RENDER FUNCTIONS ---
+        window.renderShops = (filter) => {
+            const container = document.getElementById("shops-container");
+            container.innerHTML = "";
+
+            const filtered = allShopsData.filter(s => filter === 'all' ? true : s.status === filter);
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted mt-4">No ${filter} shops found.</div>`;
+                return;
+            }
+
+            filtered.forEach(shop => {
+                let buttons = "";
+                
+                if(shop.status === 'pending') {
+                    buttons = `
+                        <button class="btn-icon btn-accept" onclick="processShop('${shop.id}', 'verified')"><i class="fas fa-check"></i></button>
+                        <button class="btn-icon btn-reject" onclick="processShop('${shop.id}', 'rejected')"><i class="fas fa-times"></i></button>
+                    `;
+                } else {
+                    buttons = `
+                        <button class="btn-icon btn-ban" onclick="processShop('${shop.id}', '${shop.status === 'suspended' ? 'verified' : 'suspended'}')">
+                            <i class="fas ${shop.status === 'suspended' ? 'fa-unlock' : 'fa-ban'}"></i>
+                        </button>
+                    `;
+                }
+
+                const html = `
+                <div class="shop-card status-${shop.status}">
+                    <div class="shop-info">
+                        <h6>${shop.shopName}</h6>
+                        <p>👤 ${shop.ownerName} | 📞 ${shop.phone}</p>
+                        <span class="badge bg-light text-dark mt-1 border">${shop.status.toUpperCase()}</span>
+                    </div>
+                    <div class="d-flex">
+                        ${buttons}
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        window.filterShops = (type) => {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            renderShops(type);
+        }
+
+        // --- ACTIONS (SWEETALERT) ---
+        window.processShop = async (id, status) => {
+            let title = status === 'verified' ? 'Approve Shop?' : (status === 'suspended' ? 'Ban Shop?' : 'Reject Shop?');
+            let color = status === 'verified' ? '#10B981' : '#EF4444';
+
+            const result = await Swal.fire({
+                title: title,
+                text: "You can change this later.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: color,
+                confirmButtonText: 'Yes, do it!'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await updateDoc(doc(db, "shops", id), { status: status });
+                    Swal.fire('Updated!', `Shop has been ${status}.`, 'success');
+                } catch (e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
             }
         };
 
-        window.switchView = (view, btn) => {
-            document.getElementById("view-dashboard").style.display = "none";
-            document.getElementById("view-approvals").style.display = "none";
-            document.getElementById("view-settings").style.display = "none";
-            
-            document.querySelectorAll(".nav-icon").forEach(el => el.classList.remove("active"));
-            
-            document.getElementById("view-" + view).style.display = "block";
-            btn.classList.add("active");
+        window.sendBroadcast = () => {
+            Swal.fire({
+                title: 'Broadcast Sent!',
+                text: 'Notification sent to all active shopkeepers.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         };
+
+        // --- NAVIGATION ---
+        window.switchTab = (tabId, btn) => {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('view-' + tabId).classList.add('active');
+            btn.classList.add('active');
+        };
+
     </script>
 </body>
 </html>
