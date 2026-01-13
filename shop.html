@@ -4,74 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Partner - Nearby Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        body { background-color: #f0f2f5; padding-bottom: 80px; }
-        .header { background: #2ecc71; color: white; padding: 20px; border-radius: 0 0 20px 20px; text-align: center; }
-        .order-card { border-left: 5px solid #2ecc71; margin-bottom: 15px; }
-        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-around; padding: 10px; z-index: 1000; }
-        .nav-btn { border: none; background: none; font-size: 24px; color: #aaa; }
-        .nav-btn.active { color: #2ecc71; }
-        #login-screen, #dashboard-screen, #inventory-screen { display: none; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F1F5F9; padding-bottom: 90px; }
+        
+        /* HEADER & SHUTTER */
+        .header {
+            background: #fff; padding: 20px; border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000;
+        }
+        .shutter-switch { transform: scale(1.5); margin-left: 10px; }
+
+        /* ORDER CARDS */
+        .order-card {
+            background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative;
+            border-left: 6px solid #CBD5E1; transition: 0.3s;
+        }
+        .status-new { border-left-color: #EF4444; background: #FEF2F2; animation: pulse 1.5s infinite; }
+        .status-preparing { border-left-color: #F59E0B; }
+        .status-ready { border-left-color: #10B981; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        /* BUTTONS */
+        .btn-custom { border-radius: 12px; padding: 10px; font-weight: 700; width: 100%; margin-top: 5px; }
+        .btn-accept { background: #10B981; color: white; border: none; }
+        .btn-otp { background: #3B82F6; color: white; border: none; }
+
+        /* INVENTORY ITEMS */
+        .item-card {
+            background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* FLOATING ADD BUTTON */
+        .fab {
+            position: fixed; bottom: 100px; right: 20px;
+            background: #4F46E5; color: white; width: 60px; height: 60px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); font-size: 28px; cursor: pointer; z-index: 2000;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #1E293B; padding: 12px 30px; border-radius: 40px;
+            display: flex; gap: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 2000;
+        }
+        .nav-icon { color: rgba(255,255,255,0.5); font-size: 1.4rem; cursor: pointer; transition: 0.3s; }
+        .nav-icon.active { color: #fff; transform: translateY(-3px); }
+
+        /* LOGIN SCREEN */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 5000; padding: 30px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="container mt-5">
-        <div class="text-center mb-4">
-            <h2>🏪 Partner App</h2>
-            <p>Grow your business online</p>
+    <div id="login-screen">
+        <div class="text-center mb-5">
+            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                <i class="fas fa-store fa-2x"></i>
+            </div>
+            <h2 class="fw-bold">Partner Login</h2>
+            <p class="text-muted">Register your shop to start selling</p>
         </div>
-        <div class="card p-4 shadow-sm">
-            <input type="text" id="shopName" class="form-control mb-3" placeholder="Shop Name (e.g. Sharma Kirana)">
-            <input type="text" id="ownerName" class="form-control mb-3" placeholder="Owner Name">
-            <input type="tel" id="phone" class="form-control mb-3" placeholder="Mobile Number">
-            <button onclick="registerShop()" class="btn btn-success w-100 btn-lg">🚀 Register Shop</button>
-            <p id="reg-status" class="mt-3 text-center text-muted small"></p>
-        </div>
+        <input type="text" id="reg-name" class="form-control form-control-lg mb-3" placeholder="Shop Name (e.g. Sharma Chai)">
+        <input type="text" id="reg-owner" class="form-control form-control-lg mb-3" placeholder="Owner Name">
+        <input type="tel" id="reg-phone" class="form-control form-control-lg mb-4" placeholder="Mobile Number">
+        <button class="btn btn-primary btn-lg w-100 rounded-pill fw-bold" onclick="registerShop()">Launch Shop 🚀</button>
     </div>
 
-    <div id="dashboard-screen">
-        <div class="header">
-            <h3 id="shop-title">My Shop</h3>
-            <span class="badge bg-light text-dark" id="shop-status">Status: Checking...</span>
-        </div>
+    <div id="main-app" style="display:none;">
         
-        <div class="container mt-4">
-            <h5>🔔 Live Orders</h5>
-            <div id="orders-list">
-                <div class="text-center text-muted mt-5">
-                    <p>No new orders yet.</p>
-                    <small>Share your shop link to get customers!</small>
+        <div class="header">
+            <div>
+                <h5 class="m-0 fw-bold" id="shop-title">My Shop</h5>
+                <small id="shop-status-text" class="text-success fw-bold">● Online</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="small fw-bold text-muted me-2">SHUTTER</span>
+                <div class="form-check form-switch">
+                    <input class="form-check-input shutter-switch" type="checkbox" id="shutter-toggle" onchange="toggleShutter()">
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="inventory-screen">
-        <div class="header" style="background: #3498db;">
-            <h3>📦 My Inventory</h3>
-        </div>
-        <div class="container mt-4">
-            <div class="input-group mb-3">
-                <input type="text" id="item-name" class="form-control" placeholder="Item Name (e.g. Milk)">
-                <input type="number" id="item-price" class="form-control" placeholder="Price (₹)">
-                <button class="btn btn-primary" onclick="addItem()">Add</button>
+        <div id="view-orders" class="p-3">
+            <div id="orders-list">
+                <div class="text-center mt-5 text-muted opacity-50">
+                    <i class="fas fa-motorcycle fa-3x mb-3"></i>
+                    <p>Waiting for orders...</p>
+                </div>
             </div>
-            <ul class="list-group" id="inventory-list">
-                </ul>
         </div>
+
+        <div id="view-inventory" class="p-3" style="display:none;">
+            <h6 class="text-muted fw-bold mb-3">My Menu Catalog</h6>
+            <div id="inventory-list">
+                </div>
+        </div>
+
     </div>
 
-    <div class="nav-bottom" id="bottom-nav" style="display:none;">
-        <button class="nav-btn active" onclick="switchTab('dashboard')">🏠</button>
-        <button class="nav-btn" onclick="switchTab('inventory')">📦</button>
-        <button class="nav-btn" onclick="alert('Profile Settings coming soon!')">⚙️</button>
+    <div id="fab-add" class="fab" onclick="addItemPopup()" style="display:none;">+</div>
+
+    <div class="bottom-nav" id="bottom-nav" style="display:none;">
+        <div class="nav-icon active" onclick="switchTab('orders', this)"><i class="fas fa-list-alt"></i></div>
+        <div class="nav-icon" onclick="switchTab('inventory', this)"><i class="fas fa-box-open"></i></div>
+        <div class="nav-icon" onclick="Swal.fire('Wallet', 'Coming soon!', 'info')"><i class="fas fa-wallet"></i></div>
     </div>
+
+    <audio id="alarm-sound" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/936/936-preview.mp3" type="audio/mpeg">
+    </audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
@@ -85,114 +143,209 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // Simple LocalStorage Login System (For Prototype)
-        let myShopId = localStorage.getItem("shopId");
+        let shopId = localStorage.getItem("shopId");
+        const alarm = document.getElementById("alarm-sound");
 
-        // --- 1. Screen Management ---
-        function checkLogin() {
-            if (myShopId) {
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("dashboard-screen").style.display = "block";
-                document.getElementById("bottom-nav").style.display = "flex";
-                loadShopData();
-                loadInventory();
-            } else {
-                document.getElementById("login-screen").style.display = "block";
-            }
-        }
-        checkLogin();
-
-        window.switchTab = (tab) => {
-            document.getElementById("dashboard-screen").style.display = "none";
-            document.getElementById("inventory-screen").style.display = "none";
-            
-            if(tab === 'dashboard') document.getElementById("dashboard-screen").style.display = "block";
-            if(tab === 'inventory') document.getElementById("inventory-screen").style.display = "block";
+        // --- 1. INITIALIZATION ---
+        if(shopId) {
+            document.getElementById("login-screen").style.display = 'none';
+            document.getElementById("main-app").style.display = 'block';
+            document.getElementById("bottom-nav").style.display = 'flex';
+            initApp();
         }
 
-        // --- 2. Registration Logic ---
         window.registerShop = async () => {
-            const name = document.getElementById("shopName").value;
-            const owner = document.getElementById("ownerName").value;
-            const phone = document.getElementById("phone").value;
-            
-            if (!name || !owner || !phone) return alert("Please fill all details");
+            const name = document.getElementById("reg-name").value;
+            const owner = document.getElementById("reg-owner").value;
+            const phone = document.getElementById("reg-phone").value;
 
-            document.getElementById("reg-status").innerText = "Registering...";
-            
-            try {
-                // Get Location
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const docRef = await addDoc(collection(db, "shops"), {
-                        shopName: name,
-                        ownerName: owner,
-                        phone: phone,
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        status: "pending", // Admin approval chahiye
-                        wallet: 0,
-                        createdAt: new Date()
-                    });
-                    
-                    localStorage.setItem("shopId", docRef.id);
-                    myShopId = docRef.id;
-                    alert("Registration Successful! Waiting for Admin Approval.");
-                    checkLogin();
-                }, () => {
-                    alert("Location Permission Denied! Location is required.");
-                    document.getElementById("reg-status").innerText = "Error: Allow Location";
+            if(!name || !phone) return Swal.fire("Missing Details", "Please fill all fields", "warning");
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const docRef = await addDoc(collection(db, "shops"), {
+                    shopName: name, ownerName: owner, phone: phone,
+                    lat: pos.coords.latitude, lng: pos.coords.longitude,
+                    status: "pending", isOpen: true, wallet: 0
                 });
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
+                localStorage.setItem("shopId", docRef.id);
+                location.reload();
+            }, () => Swal.fire("Location Error", "Location is required for customers to find you.", "error"));
         };
 
-        // --- 3. Shop Data & Status ---
-        function loadShopData() {
-            onSnapshot(doc(db, "shops", myShopId), (doc) => {
+        function initApp() {
+            // A. LISTEN TO SHOP STATUS (Shutter)
+            onSnapshot(doc(db, "shops", shopId), (doc) => {
                 const data = doc.data();
                 document.getElementById("shop-title").innerText = data.shopName;
-                document.getElementById("shop-status").innerText = "Status: " + data.status.toUpperCase();
+                document.getElementById("shutter-toggle").checked = data.isOpen;
                 
-                if(data.status === 'verified') {
-                    document.getElementById("shop-status").className = "badge bg-success";
-                } else if (data.status === 'rejected' || data.status === 'suspended') {
-                    document.getElementById("shop-status").className = "badge bg-danger";
-                    alert("Your shop is " + data.status);
+                const statusTxt = document.getElementById("shop-status-text");
+                if(data.status === 'pending') {
+                    statusTxt.innerText = "● Pending Approval";
+                    statusTxt.className = "text-warning fw-bold";
+                } else if (!data.isOpen) {
+                    statusTxt.innerText = "● Closed";
+                    statusTxt.className = "text-danger fw-bold";
+                } else {
+                    statusTxt.innerText = "● Online";
+                    statusTxt.className = "text-success fw-bold";
                 }
             });
+
+            // B. LISTEN TO ORDERS (The Brain)
+            const q = query(collection(db, "orders"), where("shopId", "==", shopId));
+            onSnapshot(q, (snapshot) => {
+                const container = document.getElementById("orders-list");
+                container.innerHTML = "";
+                let newOrderCount = 0;
+
+                if(snapshot.empty) {
+                    container.innerHTML = `<div class="text-center mt-5 text-muted opacity-50"><i class="fas fa-coffee fa-3x mb-3"></i><p>No orders yet</p></div>`;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const order = docSnap.data();
+                    const oid = docSnap.id;
+                    let actions = "";
+                    let cardClass = "";
+
+                    // LOGIC: STATUS HANDLING
+                    if (order.status === 'new') {
+                        newOrderCount++;
+                        cardClass = "status-new";
+                        actions = `
+                        <div class="d-flex gap-2">
+                            <button class="btn-custom btn-danger" onclick="updateOrder('${oid}', 'rejected')">Reject</button>
+                            <button class="btn-custom btn-accept" onclick="updateOrder('${oid}', 'preparing')">Accept Order</button>
+                        </div>`;
+                    } else if (order.status === 'preparing') {
+                        cardClass = "status-preparing";
+                        actions = `<button class="btn-custom btn-otp" onclick="updateOrder('${oid}', 'ready')">Mark Ready</button>`;
+                    } else if (order.status === 'ready') {
+                        cardClass = "status-ready";
+                        actions = `<button class="btn-custom btn-otp" onclick="verifyOTP('${oid}', '${order.otp || '1234'}')">Verify OTP & Deliver</button>`;
+                    } else if (order.status === 'delivered') {
+                        return; // Don't show delivered orders in active list
+                    }
+
+                    // RENDER CARD
+                    const itemsHtml = order.items.map(i => `<div>${i.name} <span class="text-muted">x1</span></div>`).join('');
+                    
+                    container.innerHTML += `
+                    <div class="order-card ${cardClass}">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h5 class="fw-bold m-0">${order.customerName}</h5>
+                            <span class="badge bg-dark">₹${order.totalAmount}</span>
+                        </div>
+                        <div class="text-muted small mb-3">${itemsHtml}</div>
+                        ${actions}
+                    </div>`;
+                });
+
+                // SOUND ALERT LOGIC
+                if(newOrderCount > 0) {
+                    alarm.play().catch(e => console.log("Audio permission needed"));
+                } else {
+                    alarm.pause();
+                    alarm.currentTime = 0;
+                }
+            });
+
+            // C. LISTEN TO INVENTORY
+            onSnapshot(collection(db, `shops/${shopId}/inventory`), (snapshot) => {
+                const list = document.getElementById("inventory-list");
+                list.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const item = docSnap.data();
+                    list.innerHTML += `
+                    <div class="item-card shadow-sm">
+                        <div>
+                            <h6 class="mb-0 fw-bold">${item.name}</h6>
+                            <small class="text-muted">₹${item.price}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('${docSnap.id}')"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                });
+            });
         }
 
-        // --- 4. Inventory Management ---
-        window.addItem = async () => {
-            const item = document.getElementById("item-name").value;
-            const price = document.getElementById("item-price").value;
-            
-            if(!item || !price) return;
-            
-            await addDoc(collection(db, `shops/${myShopId}/inventory`), {
-                name: item,
-                price: price,
-                inStock: true
-            });
-            
-            document.getElementById("item-name").value = "";
-            document.getElementById("item-price").value = "";
+        // --- ACTIONS ---
+        window.toggleShutter = async () => {
+            const isOpen = document.getElementById("shutter-toggle").checked;
+            await updateDoc(doc(db, "shops", shopId), { isOpen: isOpen });
+            const msg = isOpen ? "Shop is now OPEN" : "Shop is now CLOSED";
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: msg, showConfirmButton: false, timer: 1500 });
         };
 
-        function loadInventory() {
-            onSnapshot(collection(db, `shops/${myShopId}/inventory`), (snapshot) => {
-                let html = "";
-                snapshot.forEach(doc => {
-                    const i = doc.data();
-                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                        ${i.name} - ₹${i.price}
-                        <span class="badge bg-primary rounded-pill">In Stock</span>
-                    </li>`;
-                });
-                document.getElementById("inventory-list").innerHTML = html;
+        window.updateOrder = async (oid, status) => {
+            await updateDoc(doc(db, "orders", oid), { status: status });
+            // Sound will stop automatically via listener if no 'new' orders remain
+        };
+
+        window.verifyOTP = async (oid, correctOtp) => {
+            const { value: inputOtp } = await Swal.fire({
+                title: 'Enter Delivery OTP',
+                text: 'Ask customer for code',
+                input: 'text',
+                inputPlaceholder: '4-digit PIN',
+                showCancelButton: true
             });
-        }
+
+            if (inputOtp === correctOtp || inputOtp === '0000') { // 0000 as master key
+                await updateDoc(doc(db, "orders", oid), { status: 'delivered' });
+                Swal.fire("Success", "Order Delivered! Money added to wallet.", "success");
+            } else if (inputOtp) {
+                Swal.fire("Wrong OTP", "Please try again", "error");
+            }
+        };
+
+        window.addItemPopup = async () => {
+            const { value: formValues } = await Swal.fire({
+                title: 'Add New Item',
+                html:
+                    '<input id="swal-name" class="swal2-input" placeholder="Item Name (e.g. Samosa)">' +
+                    '<input id="swal-price" type="number" class="swal2-input" placeholder="Price (₹)">',
+                focusConfirm: false,
+                showCancelButton: true,
+                preConfirm: () => {
+                    return [
+                        document.getElementById('swal-name').value,
+                        document.getElementById('swal-price').value
+                    ]
+                }
+            });
+
+            if (formValues && formValues[0] && formValues[1]) {
+                await addDoc(collection(db, `shops/${shopId}/inventory`), {
+                    name: formValues[0],
+                    price: formValues[1],
+                    inStock: true
+                });
+                Swal.fire({ toast: true, position: 'bottom', icon: 'success', title: 'Item Added', showConfirmButton: false, timer: 1500 });
+            }
+        };
+
+        window.deleteItem = async (itemId) => {
+            if((await Swal.fire({ title:'Delete?', icon:'warning', showCancelButton:true })).isConfirmed) {
+                await deleteDoc(doc(db, `shops/${shopId}/inventory`, itemId));
+            }
+        };
+
+        window.switchTab = (tab, btn) => {
+            document.getElementById("view-orders").style.display = 'none';
+            document.getElementById("view-inventory").style.display = 'none';
+            document.getElementById("fab-add").style.display = 'none';
+            
+            document.querySelectorAll(".nav-icon").forEach(el => el.classList.remove("active"));
+            btn.classList.add("active");
+
+            if(tab === 'orders') {
+                document.getElementById("view-orders").style.display = 'block';
+            } else {
+                document.getElementById("view-inventory").style.display = 'block';
+                document.getElementById("fab-add").style.display = 'flex';
+            }
+        };
     </script>
 </body>
 </html>
