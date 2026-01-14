@@ -2,78 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Food & Chai - Nearby Bazar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nearby Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #f4f4f4; padding-bottom: 100px; }
+        :root { --primary: #FF4B2B; --bg: #F9FAFB; --dark: #1F2937; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         
-        /* Header */
+        /* Stunning Header */
         .header {
-            background: white; padding: 15px 20px;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.03);
-            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            background: white; padding: 20px 25px; border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;
         }
 
-        /* Search Bar */
-        .search-box {
-            background: #F3F4F6; border-radius: 12px; padding: 12px;
-            display: flex; align-items: center; margin-top: 10px;
-        }
-        .search-box input { border: none; background: transparent; width: 100%; outline: none; margin-left: 10px; }
-
-        /* Shop Cards */
+        /* Shop Card (Aesthetic) */
         .shop-card {
-            background: white; border-radius: 16px; padding: 15px;
-            margin-bottom: 15px; border: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-            transition: 0.2s; cursor: pointer; display: flex; align-items: center;
+            background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: transform 0.2s; cursor: pointer; display: flex; align-items: center;
         }
-        .shop-card:active { transform: scale(0.98); background: #fafafa; }
-        
-        .shop-icon {
-            width: 60px; height: 60px; border-radius: 12px;
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+        .shop-card:active { transform: scale(0.96); }
+        .shop-img {
+            width: 70px; height: 70px; border-radius: 18px;
+            background: linear-gradient(135deg, #FF9966, #FF5E62);
             color: white; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; font-weight: bold; margin-right: 15px;
+            font-size: 28px; font-weight: bold; margin-right: 15px; box-shadow: 0 5px 15px rgba(255, 75, 43, 0.2);
         }
-        
-        .status-badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; }
-        .open { background: #DCFCE7; color: #166534; }
-        .closed { background: #FEE2E2; color: #991B1B; }
 
-        /* Menu Modal (Bottom Sheet) */
-        .menu-sheet {
+        /* Menu Modal */
+        .full-page-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 2000; overflow-y: auto;
-            display: none; animation: slideUp 0.3s;
+            background: #fff; z-index: 2000; overflow-y: auto; display: none;
+            animation: slideUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        .menu-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 0; border-bottom: 1px dashed #eee;
+        /* Add Button */
+        .btn-add {
+            border: 1px solid #eee; background: white; color: var(--primary);
+            padding: 8px 20px; border-radius: 50px; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
+        .btn-add:active { background: var(--primary); color: white; }
 
-        /* Cart Float */
+        /* Floating Cart */
         .cart-float {
-            position: fixed; bottom: 20px; left: 5%; width: 90%;
-            background: #111; color: white; padding: 16px;
-            border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-weight: bold;
-            display: none; cursor: pointer; z-index: 3000;
-        }
-
-        /* Live Order Tracker */
-        #order-tracker {
-            background: #FEF3C7; color: #92400E; padding: 15px;
-            border-radius: 12px; margin-bottom: 20px; display: none;
-            border-left: 5px solid #F59E0B;
+            position: fixed; bottom: 25px; left: 5%; width: 90%;
+            background: #111; color: white; padding: 18px 25px;
+            border-radius: 20px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); font-weight: 600; font-size: 1.1rem;
+            display: none; cursor: pointer; z-index: 3000; backdrop-filter: blur(10px);
         }
     </style>
 </head>
@@ -81,255 +62,127 @@
 
     <div id="home-view">
         <div class="header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted fw-bold">DELIVER TO</small>
-                    <h5 class="m-0 fw-bold text-dark"><i class="fas fa-map-marker-alt text-danger"></i> Current Location</h5>
-                </div>
-                <div class="bg-light p-2 rounded-circle"><i class="fas fa-user"></i></div>
-            </div>
+            <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">Location</small>
+            <h5 class="fw-bold m-0"><i class="fas fa-map-marker-alt text-danger me-2"></i>Current Location</h5>
             
-            <div class="search-box">
-                <i class="fas fa-search text-muted"></i>
-                <input type="text" id="search-input" placeholder="Search for chai, snacks..." onkeyup="filterShops()">
+            <div class="mt-4">
+                <input type="text" class="form-control form-control-lg border-0 bg-light" placeholder="🔍 Search food, chai..." style="border-radius: 15px;" onkeyup="filterShops(this.value)">
             </div>
         </div>
 
-        <div class="container mt-3">
-            <div id="order-tracker">
-                <div class="d-flex justify-content-between">
-                    <strong><i class="fas fa-clock"></i> Order Active</strong>
-                    <span id="order-status-badge">Preparing...</span>
-                </div>
-                <div class="mt-2 small">OTP: <strong id="order-otp" class="fs-5">----</strong> (Share with Delivery Boy)</div>
-            </div>
-
-            <h6 class="text-muted fw-bold mb-3">NEARBY SHOPS</h6>
+        <div class="container mt-4">
+            <h6 class="fw-bold mb-3" style="color: #9CA3AF;">NEARBY FAVORITES</h6>
             <div id="shops-container">
-                <div class="text-center mt-5">
-                    <div class="spinner-border text-primary"></div>
-                    <p class="mt-2 text-muted">Finding shops...</p>
-                </div>
+                <div class="text-center mt-5"><div class="spinner-border text-danger"></div></div>
             </div>
         </div>
     </div>
 
-    <div id="menu-view" class="menu-sheet">
-        <div class="header d-flex align-items-center sticky-top">
-            <button class="btn btn-light rounded-circle me-3 shadow-sm" onclick="closeMenu()"><i class="fas fa-arrow-left"></i></button>
-            <div>
-                <h5 class="m-0 fw-bold" id="menu-shop-name">Shop Name</h5>
-                <small class="text-muted">Menu</small>
-            </div>
+    <div id="menu-view" class="full-page-modal">
+        <div class="p-3 sticky-top bg-white d-flex align-items-center shadow-sm">
+            <button class="btn btn-light rounded-circle me-3" onclick="closeMenu()"><i class="fas fa-arrow-left"></i></button>
+            <h5 class="m-0 fw-bold" id="menu-title">Shop Name</h5>
         </div>
-        
-        <div class="container mt-4">
-            <div id="menu-items">
-                </div>
-            <div style="height: 100px;"></div> </div>
+        <div class="container mt-3" id="menu-list"></div>
+        <div style="height: 100px;"></div>
     </div>
 
     <div id="cart-btn" class="cart-float" onclick="placeOrder()">
-        <span><span id="item-count">0</span> Items | ₹<span id="cart-total">0</span></span>
-        <span>Place Order <i class="fas fa-chevron-right ms-2"></i></span>
+        <span><span id="cart-count">0</span> Items</span>
+        <span>View Cart <i class="fas fa-arrow-right ms-2"></i></span>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, getDocs, addDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
-            authDomain: "nearby-bazar.firebaseapp.com",
-            projectId: "nearby-bazar",
-            storageBucket: "nearby-bazar.firebasestorage.app",
-            messagingSenderId: "183262510084",
-            appId: "1:183262510084:web:909fa3aac2f2429a7d8951"
-        };
+        // CONFIG (Same for all)
+        const firebaseConfig = { apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:909fa3aac2f2429a7d8951" };
+        const db = getFirestore(initializeApp(firebaseConfig));
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // State
-        let currentShopId = null;
+        let currentShop = null;
         let cart = [];
         let total = 0;
-        let activeOrderId = localStorage.getItem("lastOrderId");
 
-        // --- 1. LOAD SHOPS (NO MAP, JUST LIST) ---
-        onSnapshot(collection(db, "shops"), (snapshot) => {
-            const container = document.getElementById("shops-container");
-            container.innerHTML = "";
+        // LOAD SHOPS
+        onSnapshot(collection(db, "shops"), (snap) => {
+            const div = document.getElementById("shops-container");
+            div.innerHTML = "";
             let found = false;
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                // Logic: Show if verified. 
-                // isOpen toggle logic: Show badge but don't hide shop completely.
-                if(data.status === 'verified') {
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(d.status === 'verified' && d.isOpen) {
                     found = true;
-                    const initial = data.shopName.charAt(0).toUpperCase();
-                    const isOpen = data.isOpen !== false; // Default true if field missing
-                    
-                    const statusHtml = isOpen 
-                        ? `<span class="status-badge open">OPEN</span>` 
-                        : `<span class="status-badge closed">CLOSED</span>`;
-                    
-                    const opacity = isOpen ? '1' : '0.6';
-
-                    container.innerHTML += `
-                    <div class="shop-card" style="opacity: ${opacity}" onclick="openShop('${doc.id}', '${data.shopName}', ${isOpen})">
-                        <div class="shop-icon">${initial}</div>
-                        <div style="flex:1;">
-                            <h6 class="m-0 fw-bold text-dark">${data.shopName}</h6>
-                            <p class="m-0 text-muted small">${data.ownerName}</p>
-                        </div>
-                        <div class="text-end">
-                            ${statusHtml}
+                    div.innerHTML += `
+                    <div class="shop-card" onclick="window.loadMenu('${doc.id}', '${d.shopName}')">
+                        <div class="shop-img">${d.shopName[0]}</div>
+                        <div>
+                            <h6 class="fw-bold m-0 text-dark">${d.shopName}</h6>
+                            <small class="text-muted">⭐ 4.5 • 25 mins</small>
                         </div>
                     </div>`;
                 }
             });
-
-            if(!found) container.innerHTML = `<div class="text-center mt-5 text-muted"><h4>😕</h4><p>No verified shops found.</p></div>`;
+            if(!found) div.innerHTML = "<p class='text-center text-muted'>No shops open nearby.</p>";
         });
 
-        // --- 2. TRACK ACTIVE ORDER ---
-        if(activeOrderId) {
-            trackOrder(activeOrderId);
-        }
-
-        function trackOrder(orderId) {
-            onSnapshot(query(collection(db, "orders"), where("__name__", "==", orderId)), (snapshot) => {
-                if(!snapshot.empty) {
-                    const data = snapshot.docs[0].data();
-                    document.getElementById("order-tracker").style.display = "block";
-                    document.getElementById("order-otp").innerText = data.otp;
-                    
-                    let statusText = "Sent to Shop";
-                    if(data.status === 'preparing') statusText = "👨‍🍳 Preparing...";
-                    if(data.status === 'ready') statusText = "📦 Ready for Pickup/Delivery";
-                    if(data.status === 'delivered') {
-                        statusText = "✅ Delivered";
-                        document.getElementById("order-tracker").style.background = "#DCFCE7";
-                        setTimeout(() => { document.getElementById("order-tracker").style.display = 'none'; }, 5000);
-                        localStorage.removeItem("lastOrderId");
-                    }
-                    if(data.status === 'rejected') {
-                         statusText = "❌ Order Rejected";
-                         document.getElementById("order-tracker").style.background = "#FEE2E2";
-                    }
-                    
-                    document.getElementById("order-status-badge").innerText = statusText;
-                }
-            });
-        }
-
-        // --- 3. SHOP MENU LOGIC ---
-        window.openShop = async (id, name, isOpen) => {
-            if(!isOpen) return Swal.fire("Shop Closed", "This shop is currently not accepting orders.", "info");
-
-            currentShopId = id;
-            document.getElementById("menu-shop-name").innerText = name;
-            document.getElementById("home-view").style.display = "none";
-            document.getElementById("menu-view").style.display = "block";
+        // MENU LOGIC
+        window.loadMenu = async (id, name) => {
+            currentShop = id;
+            document.getElementById("menu-title").innerText = name;
+            document.getElementById("menu-view").style.display = 'block';
+            document.getElementById("home-view").style.display = 'none';
             
-            // Load Items
-            const list = document.getElementById("menu-items");
-            list.innerHTML = `<div class="text-center mt-5"><div class="spinner-border"></div></div>`;
+            const list = document.getElementById("menu-list");
+            list.innerHTML = "<div class='text-center mt-5'><div class='spinner-border'></div></div>";
             
-            const q = await getDocs(collection(db, `shops/${id}/inventory`));
+            const items = await getDocs(collection(db, `shops/${id}/inventory`));
             list.innerHTML = "";
-            
-            if(q.empty) {
-                list.innerHTML = `<div class="text-center mt-5 text-muted">Menu is empty.</div>`;
-                return;
-            }
-
-            q.forEach(doc => {
-                const item = doc.data();
+            items.forEach(doc => {
+                const i = doc.data();
                 list.innerHTML += `
-                <div class="menu-item">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <div>
-                        <h6 class="mb-0 fw-bold">${item.name}</h6>
-                        <small class="text-muted">₹${item.price}</small>
+                        <h6 class="fw-bold m-0">${i.name}</h6>
+                        <span class="text-muted">₹${i.price}</span>
                     </div>
-                    <button class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-bold" onclick="addItem('${item.name}', ${item.price})">ADD +</button>
+                    <button class="btn-add" onclick="window.addToCart('${i.name}', ${i.price})">ADD</button>
                 </div>`;
             });
-        }
+        };
+
+        window.addToCart = (name, price) => {
+            cart.push({name, price});
+            total += parseInt(price);
+            document.getElementById("cart-count").innerText = cart.length;
+            document.getElementById("cart-btn").style.display = 'flex';
+        };
 
         window.closeMenu = () => {
-            document.getElementById("menu-view").style.display = "none";
-            document.getElementById("home-view").style.display = "block";
-            cart = []; total = 0; updateCart();
-        }
+            document.getElementById("menu-view").style.display = 'none';
+            document.getElementById("home-view").style.display = 'block';
+            cart = []; total = 0;
+            document.getElementById("cart-btn").style.display = 'none';
+        };
 
-        window.addItem = (name, price) => {
-            cart.push({ name, price });
-            total += parseInt(price);
-            updateCart();
-            const btn = document.getElementById("cart-btn");
-            btn.classList.add("animate__animated", "animate__pulse"); // Little bounce
-        }
-
-        function updateCart() {
-            if(cart.length > 0) {
-                document.getElementById("cart-btn").style.display = "flex";
-                document.getElementById("item-count").innerText = cart.length;
-                document.getElementById("cart-total").innerText = total;
-            } else {
-                document.getElementById("cart-btn").style.display = "none";
-            }
-        }
-
-        // --- 4. PLACE ORDER (WITH OTP) ---
         window.placeOrder = async () => {
-            if(cart.length === 0) return;
-
-            // Generate 4 Digit OTP
-            const otp = Math.floor(1000 + Math.random() * 9000).toString();
-
-            try {
-                const docRef = await addDoc(collection(db, "orders"), {
-                    shopId: currentShopId,
-                    customerName: "Guest User", // Baad me login lagayenge
-                    items: cart,
-                    totalAmount: total,
-                    otp: otp, // Important for verification
-                    status: "new",
-                    timestamp: new Date()
-                });
-                
-                localStorage.setItem("lastOrderId", docRef.id);
-                activeOrderId = docRef.id;
-                
-                Swal.fire({
-                    title: 'Order Placed! 🎉',
-                    text: `Your OTP is ${otp}. Show this to delivery boy.`,
-                    icon: 'success',
-                    confirmButtonText: 'Track Order'
-                }).then(() => {
-                    closeMenu();
-                    trackOrder(activeOrderId);
-                });
-
-            } catch (e) {
-                Swal.fire("Error", e.message, "error");
-            }
-        }
-        
-        // Search Filter
-        window.filterShops = () => {
-            const input = document.getElementById('search-input').value.toLowerCase();
-            const cards = document.getElementsByClassName('shop-card');
-            
-            Array.from(cards).forEach(card => {
-                const name = card.getElementsByTagName('h6')[0].innerText.toLowerCase();
-                if(name.includes(input)) card.style.display = "flex";
-                else card.style.display = "none";
+            const otp = Math.floor(1000 + Math.random() * 9000);
+            await addDoc(collection(db, "orders"), {
+                shopId: currentShop,
+                items: cart,
+                total: total,
+                otp: otp,
+                status: 'new',
+                customerName: 'Guest User',
+                time: new Date()
             });
-        }
+            Swal.fire({ icon: 'success', title: 'Order Placed!', text: `Show OTP ${otp} to shopkeeper`, confirmButtonColor: '#111' });
+            window.closeMenu();
+        };
+
+        window.filterShops = (val) => {
+            // Simple filter logic can be added here
+        };
     </script>
 </body>
 </html>
