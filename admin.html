@@ -3,347 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin HQ - Nearby Bazar</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Super Admin - Nearby Bazar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root {
-            --primary: #4F46E5; /* Indigo */
-            --bg: #F3F4F6;
-            --card-bg: #ffffff;
-            --text-dark: #1F2937;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            padding-bottom: 90px; /* Space for bottom nav */
-            color: var(--text-dark);
-        }
-
-        /* Modern Header */
-        .header {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            position: sticky; top: 0; z-index: 100;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-            text-align: center;
-        }
-        .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
-        .stat-label { font-size: 0.85rem; color: #6B7280; font-weight: 600; }
-
-        /* Shop Cards (List View) */
-        .shop-card {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            border-left: 5px solid transparent;
-            transition: transform 0.2s;
-        }
-        .shop-card:active { transform: scale(0.98); }
-        .shop-info h6 { margin: 0; font-weight: 700; }
-        .shop-info p { margin: 0; font-size: 0.8rem; color: #6B7280; }
+        :root { --primary: #4F46E5; --bg: #F8FAFC; --card: #FFFFFF; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); padding-bottom: 90px; }
         
-        /* Status Colors */
+        .header { background: var(--card); padding: 25px; border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .stat-card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 15px; }
+        
+        /* Lists */
+        .data-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .status-verified { border-left-color: #10B981; }
+        .status-suspended { border-left-color: #EF4444; background: #FEF2F2; }
         .status-pending { border-left-color: #F59E0B; }
-        .status-suspended { border-left-color: #EF4444; }
+        
+        /* Defaulter Badge */
+        .badge-defaulter { background: #fee2e2; color: #991b1b; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
 
-        /* Action Buttons */
-        .btn-icon {
-            width: 40px; height: 40px;
-            border-radius: 12px;
-            border: none;
-            display: flex; align-items: center; justify-content: center;
-            margin-left: 5px;
-        }
-        .btn-accept { background: #DCFCE7; color: #166534; }
-        .btn-reject { background: #FEE2E2; color: #991B1B; }
-        .btn-ban { background: #F3F4F6; color: #374151; }
-
-        /* Bottom Navigation (App Like) */
-        .bottom-nav {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #1F2937;
-            padding: 12px 25px;
-            border-radius: 40px;
-            display: flex; gap: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            z-index: 1000;
-        }
-        .nav-item {
-            color: rgba(255,255,255,0.5);
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .nav-item.active { color: white; transform: translateY(-3px); }
-        .nav-badge {
-            position: absolute; top: -5px; right: -5px;
-            background: #EF4444; color: white;
-            font-size: 10px; padding: 2px 6px; border-radius: 10px;
-        }
-
-        /* Section Visibility */
-        .section-view { display: none; padding: 20px; animation: fadeIn 0.3s; }
-        .section-view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        .nav-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1E293B; padding: 12px 30px; border-radius: 40px; display: flex; gap: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; }
+        .nav-icon { color: rgba(255,255,255,0.5); font-size: 1.4rem; cursor: pointer; }
+        .nav-icon.active { color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="mb-0 fw-bold">Admin HQ</h4>
-                <small class="text-muted">Superadmin Control</small>
+    <div id="view-home" class="p-3">
+        <div class="header mb-4">
+            <h4 class="fw-bold m-0">⚡ Command Center</h4>
+            <small class="text-muted">Master Control</small>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="stat-card border-start border-4 border-success">
+                    <small class="text-muted">Total Revenue</small>
+                    <h4 class="fw-bold text-success m-0">₹<span id="stat-rev">0</span></h4>
+                </div>
             </div>
-            <div class="bg-light p-2 rounded-circle">
-                <img src="https://ui-avatars.com/api/?name=Admin&background=random" width="30" class="rounded-circle">
+            <div class="col-6">
+                <div class="stat-card border-start border-4 border-danger">
+                    <small class="text-muted">Market Udhar</small>
+                    <h4 class="fw-bold text-danger m-0">₹<span id="stat-udhar">0</span></h4>
+                </div>
             </div>
+            <div class="col-6">
+                <div class="stat-card">
+                    <small class="text-muted">Active Shops</small>
+                    <h4 class="fw-bold m-0" id="stat-shops">0</h4>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card">
+                    <small class="text-muted">Defaulters</small>
+                    <h4 class="fw-bold text-danger m-0" id="stat-defaulters">0</h4>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="text-muted fw-bold mt-3">PENDING VERIFICATIONS</h6>
+        <div id="pending-list">
+            <div class="text-center text-muted mt-3 small">No new applications</div>
         </div>
     </div>
 
-    <div id="view-dashboard" class="section-view active">
-        <h5 class="fw-bold mb-3">Overview</h5>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-val text-success">₹<span id="stat-revenue">0</span></div>
-                <div class="stat-label">Total Revenue</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val" id="stat-shops">0</div>
-                <div class="stat-label">Active Shops</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val" id="stat-users">0</div>
-                <div class="stat-label">Users</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val text-warning" id="stat-pending">0</div>
-                <div class="stat-label">Pending Req</div>
-            </div>
-        </div>
-
-        <div class="mt-4 p-3 bg-white rounded-4 shadow-sm">
-            <h6 class="fw-bold">📢 Quick Broadcast</h6>
-            <textarea class="form-control mb-2" style="border:1px solid #eee;" placeholder="Send notification to all shops..."></textarea>
-            <button class="btn btn-primary w-100 rounded-pill" onclick="sendBroadcast()">Send Alert</button>
-        </div>
+    <div id="view-shops" class="p-3" style="display:none;">
+        <h5 class="fw-bold mb-3">🏪 Shop Database</h5>
+        <input type="text" class="form-control rounded-pill mb-3" placeholder="Search Shop..." onkeyup="filterList('shop-container', this.value)">
+        <div id="shop-container">Loading...</div>
     </div>
 
-    <div id="view-shops" class="section-view">
-        <h5 class="fw-bold mb-3">Shop Management</h5>
+    <div id="view-users" class="p-3" style="display:none;">
+        <h5 class="fw-bold mb-3">👥 Users & Defaulters</h5>
+        <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="filterUsers('all')">All</button>
+            <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="filterUsers('defaulter')">Defaulters</button>
+        </div>
+        <div id="user-container">Loading...</div>
+    </div>
+
+    <div id="view-tools" class="p-3" style="display:none;">
+        <h5 class="fw-bold mb-3">🛡️ Security & Tools</h5>
         
-        <ul class="nav nav-pills mb-3" id="pills-tab">
-            <li class="nav-item"><a class="nav-link active rounded-pill py-1" onclick="filterShops('all')">All</a></li>
-            <li class="nav-item"><a class="nav-link rounded-pill py-1" onclick="filterShops('pending')">Pending</a></li>
-            <li class="nav-item"><a class="nav-link rounded-pill py-1" onclick="filterShops('verified')">Live</a></li>
-        </ul>
-
-        <div id="shops-container">
-            <div class="text-center mt-5 text-muted">Loading data...</div>
-        </div>
-    </div>
-
-    <div id="view-users" class="section-view">
-        <h5 class="fw-bold mb-3">Users & Disputes</h5>
-        
-        <div class="card p-3 border-0 shadow-sm mb-3">
-            <h6 class="fw-bold text-danger">⚖️ Active Disputes</h6>
-            <div class="text-center py-4 bg-light rounded-3">
-                <i class="fas fa-check-circle text-success mb-2"></i>
-                <p class="small text-muted mb-0">No active fights! Peace everywhere.</p>
+        <div class="card p-3 border-0 shadow-sm mb-3 bg-white" onclick="sendBroadcast()">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary text-white p-3 rounded-circle me-3"><i class="fas fa-bullhorn"></i></div>
+                <div><h6 class="m-0 fw-bold">Broadcast Alert</h6><small>Send notification to all</small></div>
             </div>
         </div>
 
-        <h6 class="fw-bold">👥 Registered Customers</h6>
-        <div id="users-list">
-             <p class="text-muted small">Realtime user list loading...</p>
-        </div>
+        <h6 class="text-danger fw-bold mt-4">🚨 SUSPICIOUS ACTIVITY / DISPUTES</h6>
+        <div id="dispute-list">
+            </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('dashboard', this)">
-            <i class="fas fa-chart-pie"></i>
-        </div>
-        <div class="nav-item" onclick="switchTab('shops', this)" style="position: relative;">
-            <i class="fas fa-store"></i>
-            <span id="nav-badge" class="nav-badge" style="display:none">0</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('users', this)">
-            <i class="fas fa-users-cog"></i>
-        </div>
+    <div class="nav-bar">
+        <div class="nav-icon active" onclick="switchView('home', this)"><i class="fas fa-chart-pie"></i></div>
+        <div class="nav-icon" onclick="switchView('shops', this)"><i class="fas fa-store"></i></div>
+        <div class="nav-icon" onclick="switchView('users', this)"><i class="fas fa-users"></i></div>
+        <div class="nav-icon" onclick="switchView('tools', this)"><i class="fas fa-shield-alt"></i></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
-            authDomain: "nearby-bazar.firebaseapp.com",
-            projectId: "nearby-bazar",
-            storageBucket: "nearby-bazar.firebasestorage.app",
-            messagingSenderId: "183262510084",
-            appId: "1:183262510084:web:909fa3aac2f2429a7d8951"
-        };
+        const db = getFirestore(initializeApp({ apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:909fa3aac2f2429a7d8951" }));
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // --- GLOBAL VARIABLES ---
-        let allShopsData = [];
-
-        // --- REALTIME LISTENERS ---
-        onSnapshot(collection(db, "shops"), (snapshot) => {
-            let total = 0, pending = 0, verified = 0;
-            allShopsData = []; // Reset
-
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                data.id = docSnap.id; // Append ID
-                allShopsData.push(data);
-
-                total++;
-                if(data.status === 'pending') pending++;
-                if(data.status === 'verified') verified++;
-            });
-
-            // Update Stats
-            document.getElementById("stat-shops").innerText = verified;
-            document.getElementById("stat-pending").innerText = pending;
+        // 1. DATA LISTENERS
+        onSnapshot(collection(db, "shops"), (snap) => {
+            let pendingHTML = "", shopsHTML = "";
+            let verifiedCount = 0;
             
-            // Update Badge
-            const badge = document.getElementById("nav-badge");
-            if(pending > 0) {
-                badge.style.display = "block";
-                badge.innerText = pending;
-            } else {
-                badge.style.display = "none";
-            }
-
-            // Refresh List (Default All)
-            renderShops('all');
-        });
-
-        // --- RENDER FUNCTIONS ---
-        window.renderShops = (filter) => {
-            const container = document.getElementById("shops-container");
-            container.innerHTML = "";
-
-            const filtered = allShopsData.filter(s => filter === 'all' ? true : s.status === filter);
-
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center text-muted mt-4">No ${filter} shops found.</div>`;
-                return;
-            }
-
-            filtered.forEach(shop => {
-                let buttons = "";
+            snap.forEach(d => {
+                const s = d.data();
+                const id = d.id;
                 
-                if(shop.status === 'pending') {
-                    buttons = `
-                        <button class="btn-icon btn-accept" onclick="processShop('${shop.id}', 'verified')"><i class="fas fa-check"></i></button>
-                        <button class="btn-icon btn-reject" onclick="processShop('${shop.id}', 'rejected')"><i class="fas fa-times"></i></button>
-                    `;
-                } else {
-                    buttons = `
-                        <button class="btn-icon btn-ban" onclick="processShop('${shop.id}', '${shop.status === 'suspended' ? 'verified' : 'suspended'}')">
-                            <i class="fas ${shop.status === 'suspended' ? 'fa-unlock' : 'fa-ban'}"></i>
-                        </button>
-                    `;
+                if(s.status === 'verified') verifiedCount++;
+
+                // Aadhar Verification Block
+                if(s.status === 'pending') {
+                    pendingHTML += `
+                    <div class="data-card status-pending">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold">${s.shopName}</h6>
+                            <span class="badge bg-warning text-dark">NEW</span>
+                        </div>
+                        <p class="small text-muted mb-1">Owner: ${s.ownerName}</p>
+                        <p class="small text-muted mb-2">UPI: ${s.upiId || 'Not Provided'}</p>
+                        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="Swal.fire('Aadhar ID', '${s.aadharUrl || 'No file uploaded'}', 'info')">📄 View Aadhar</button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-success w-50" onclick="updateStatus('${id}', 'verified')">Approve</button>
+                            <button class="btn btn-sm btn-danger w-50" onclick="updateStatus('${id}', 'rejected')">Reject</button>
+                        </div>
+                    </div>`;
                 }
 
-                const html = `
-                <div class="shop-card status-${shop.status}">
-                    <div class="shop-info">
-                        <h6>${shop.shopName}</h6>
-                        <p>👤 ${shop.ownerName} | 📞 ${shop.phone}</p>
-                        <span class="badge bg-light text-dark mt-1 border">${shop.status.toUpperCase()}</span>
-                    </div>
-                    <div class="d-flex">
-                        ${buttons}
+                // Shop List (With Kill Switch)
+                const isBanned = s.status === 'suspended';
+                shopsHTML += `
+                <div class="data-card status-${s.status} search-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold m-0">${s.shopName}</h6>
+                            <small class="${s.status=='verified'?'text-success':'text-danger'}">● ${s.status.toUpperCase()}</small>
+                        </div>
+                        <button class="btn btn-sm ${isBanned?'btn-dark':'btn-outline-danger'}" onclick="updateStatus('${id}', '${isBanned?'verified':'suspended'}')">
+                            ${isBanned ? 'Unban' : 'KILL SWITCH'}
+                        </button>
                     </div>
                 </div>`;
-                container.innerHTML += html;
-            });
-        }
-
-        window.filterShops = (type) => {
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            event.target.classList.add('active');
-            renderShops(type);
-        }
-
-        // --- ACTIONS (SWEETALERT) ---
-        window.processShop = async (id, status) => {
-            let title = status === 'verified' ? 'Approve Shop?' : (status === 'suspended' ? 'Ban Shop?' : 'Reject Shop?');
-            let color = status === 'verified' ? '#10B981' : '#EF4444';
-
-            const result = await Swal.fire({
-                title: title,
-                text: "You can change this later.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: color,
-                confirmButtonText: 'Yes, do it!'
             });
 
-            if (result.isConfirmed) {
-                try {
-                    await updateDoc(doc(db, "shops", id), { status: status });
-                    Swal.fire('Updated!', `Shop has been ${status}.`, 'success');
-                } catch (e) {
-                    Swal.fire('Error', e.message, 'error');
+            document.getElementById("stat-shops").innerText = verifiedCount;
+            document.getElementById("pending-list").innerHTML = pendingHTML || '<div class="text-center mt-3 text-muted">No pending items</div>';
+            document.getElementById("shop-container").innerHTML = shopsHTML;
+        });
+
+        // 2. USER & UDHAR LOGIC (Calculated from Orders)
+        onSnapshot(collection(db, "orders"), (snap) => {
+            let totalRev = 0, totalUdhar = 0;
+            let users = {}; // Map to store user stats
+            let disputesHTML = "";
+
+            snap.forEach(d => {
+                const o = d.data();
+                totalRev += (o.totalAmount || 0);
+                
+                // Udhar Logic
+                if(o.paymentMode === 'Udhar') totalUdhar += (o.totalAmount || 0);
+
+                // User Aggregation
+                if(o.customerName) {
+                    if(!users[o.customerName]) users[o.customerName] = { name: o.customerName, udhar: 0, orders: 0, disputes: 0 };
+                    users[o.customerName].orders++;
+                    if(o.paymentMode === 'Udhar' && o.status === 'delivered') users[o.customerName].udhar += o.totalAmount;
+                    if(o.disputeStatus === 'active') users[o.customerName].disputes++;
                 }
-            }
+
+                // Dispute Monitor
+                if(o.disputeStatus === 'active') {
+                    disputesHTML += `
+                    <div class="data-card border-danger">
+                        <h6 class="fw-bold text-danger">⚠️ Dispute Reported</h6>
+                        <small>User: ${o.customerName} | Shop ID: ${o.shopId}</small>
+                        <p class="mb-1">Item not received reported.</p>
+                        <button class="btn btn-sm btn-dark" onclick="resolveDispute('${d.id}')">Mark Resolved</button>
+                    </div>`;
+                }
+            });
+
+            // Render Users
+            let userHTML = "";
+            let defaultersCount = 0;
+            
+            Object.values(users).forEach(u => {
+                const isDefaulter = u.udhar > 500; // Threshold
+                const isSuspicious = u.disputes > 2; // Fraud Detection
+                if(isDefaulter) defaultersCount++;
+
+                userHTML += `
+                <div class="data-card search-item ${isDefaulter ? 'defaulter-row' : ''}">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="fw-bold m-0">${u.name} ${isSuspicious ? '🚨' : ''}</h6>
+                        ${isDefaulter ? '<span class="badge-defaulter">DEFAULTER</span>' : '<span class="badge bg-light text-dark">Good</span>'}
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 small">
+                        <span>Market Udhar: <strong>₹${u.udhar}</strong></span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="Swal.fire('Global Ban', 'User ${u.name} blocked.', 'error')">Global Ban</button>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById("stat-rev").innerText = totalRev;
+            document.getElementById("stat-udhar").innerText = totalUdhar;
+            document.getElementById("stat-defaulters").innerText = defaultersCount;
+            document.getElementById("user-container").innerHTML = userHTML;
+            document.getElementById("dispute-list").innerHTML = disputesHTML || '<p class="text-center text-muted">No active disputes.</p>';
+        });
+
+        // GLOBAL FUNCTIONS
+        window.updateStatus = async (id, st) => {
+            const confirm = await Swal.fire({ title: `Mark as ${st}?`, icon: 'warning', showCancelButton: true });
+            if(confirm.isConfirmed) await updateDoc(doc(db, "shops", id), { status: st });
         };
 
-        window.sendBroadcast = () => {
-            Swal.fire({
-                title: 'Broadcast Sent!',
-                text: 'Notification sent to all active shopkeepers.',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
+        window.sendBroadcast = async () => {
+            const { value: text } = await Swal.fire({ title: 'Broadcast', input: 'textarea', inputPlaceholder: 'Message to all...' });
+            if(text) Swal.fire('Sent', 'Notification dispatched', 'success');
+        };
+
+        window.resolveDispute = async (oid) => {
+            await updateDoc(doc(db, "orders", oid), { disputeStatus: 'resolved' });
+            Swal.fire('Resolved', 'Ticket closed', 'success');
+        };
+
+        window.switchView = (id, el) => {
+            document.querySelectorAll('div[id^="view-"]').forEach(d => d.style.display='none');
+            document.getElementById('view-'+id).style.display='block';
+            document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        };
+
+        window.filterList = (con, val) => {
+            const items = document.getElementById(con).getElementsByClassName('search-item');
+            Array.from(items).forEach(i => i.style.display = i.innerText.toLowerCase().includes(val.toLowerCase()) ? 'block' : 'none');
+        };
+        
+        window.filterUsers = (type) => {
+            const items = document.getElementById('user-container').children;
+            Array.from(items).forEach(i => {
+                if(type === 'all') i.style.display = 'block';
+                else i.style.display = i.classList.contains('defaulter-row') ? 'block' : 'none';
             });
         };
-
-        // --- NAVIGATION ---
-        window.switchTab = (tabId, btn) => {
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById('view-' + tabId).classList.add('active');
-            btn.classList.add('active');
-        };
-
     </script>
 </body>
 </html>
