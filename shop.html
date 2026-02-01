@@ -21,7 +21,6 @@
         
         .aesthetic-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 12px; }
         .live-card { background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 18px; margin-bottom: 12px; transition: all 0.3s ease; }
-        body.light-mode .live-card { background: rgba(255, 255, 255, 0.8); border: 1px solid #e5e7eb; }
         
         .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .status-pending { background: rgba(234, 179, 8, 0.2); color: #fbbf24; border: 1px solid rgba(234, 179, 8, 0.3); animation: pulse 2s infinite; }
@@ -46,7 +45,7 @@
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; padding: 24px; overflow-y: auto; }
     </style>
 </head>
-<body>
+<body onclick="stopAlarmInteraction()">
 
     <div id="auth-screen">
         <div class="text-center mb-10">
@@ -164,8 +163,15 @@
     <audio id="order-sound"></audio>
 
     <script>
-        // --- NEARBY BAZAR API KEY ---
-        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "sgmc-16568.firebaseapp.com", projectId: "sgmc-16568", storageBucket: "sgmc-16568.firebasestorage.app", messagingSenderId: "339041646158", appId: "1:339041646158:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
+        // --- CORRECT NEARBY BAZAR API KEY ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko", 
+            authDomain: "nearby-bazar.firebaseapp.com", 
+            projectId: "nearby-bazar", 
+            storageBucket: "nearby-bazar.firebasestorage.app", 
+            messagingSenderId: "183262510084", 
+            appId: "1:183262510084:web:909fa3aac2f2429a7d8951" 
+        };
         firebase.initializeApp(firebaseConfig); 
         const db = firebase.firestore();
 
@@ -180,14 +186,12 @@
         // --- AUTH ---
         function checkAuth() {
             if(SHOP_ID) {
-                // If logged in, hide auth, show app, init
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-ui').classList.remove('hidden');
                 initShop();
             }
         }
         
-        // Expose functions to window for onclick to work reliably
         window.toggleAuth = (m) => { document.getElementById('login-form').classList.toggle('hidden', m!=='login'); document.getElementById('register-form').classList.toggle('hidden', m!=='register'); }
         
         window.login = () => {
@@ -198,8 +202,10 @@
             if(!id || !pass) return Swal.fire("Error","Enter credentials","error");
             
             btn.innerText = "Checking...";
+            btn.disabled = true;
             
             db.collection('shops').doc(id).get().then(doc => {
+                btn.disabled = false;
                 if(doc.exists && doc.data().password === pass) {
                     if(doc.data().status === 'suspended') { btn.innerText = "Login"; return Swal.fire("Blocked","Shop Suspended","error"); }
                     if(doc.data().status === 'pending') { btn.innerText = "Login"; return Swal.fire("Pending","Wait for approval","info"); }
@@ -212,6 +218,7 @@
                     Swal.fire("Error","Invalid Login","error");
                 }
             }).catch(e => {
+                btn.disabled = false;
                 btn.innerText = "Login";
                 Swal.fire("Error",e.message,"error");
             });
@@ -224,6 +231,7 @@
             if(!id) return Swal.fire("Error", "Enter Username", "warning");
             
             btn.innerText = "Processing...";
+            btn.disabled = true;
             
             const data = {
                 shopId: id, shopName: document.getElementById('reg-name').value,
@@ -243,9 +251,11 @@
                 db.collection('shops').doc(id).collection('menu').doc('items').set({customItems:[]});
                 Swal.fire("Success","Request Sent! Wait for approval","success");
                 btn.innerText = "Submit";
+                btn.disabled = false;
                 window.toggleAuth('login');
             }).catch(e => {
                 btn.innerText = "Submit";
+                btn.disabled = false;
                 Swal.fire("Error",e.message,"error");
             });
         }
@@ -296,6 +306,7 @@
         function renderOrders() {
             const list = document.getElementById('view-live');
             let html = '';
+            
             allOrders.forEach(d => {
                 if(['pending','cooking','ready'].includes(d.status)) {
                     const stClass = d.status === 'pending' ? 'status-pending' : d.status === 'cooking' ? 'status-cooking' : 'status-ready';
