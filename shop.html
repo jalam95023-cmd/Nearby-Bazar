@@ -6,347 +6,393 @@
     <title>Vendor Partner - Nearby Bazar</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* SGMC Dark Theme Base */
         :root { --bg: #050505; --card: #141414; --border: #333; --accent: #F97316; --text: #fff; }
         body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding-bottom: 80px; }
         
         .aesthetic-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+        .full-screen { position: fixed; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; justify-content: center; padding: 24px; overflow-y: auto; }
         
-        /* Login Modal (Full Screen) */
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; padding: 20px; }
-        
-        input { background: #222; border: 1px solid #444; color: white; padding: 12px; width: 100%; border-radius: 10px; margin-bottom: 10px; outline: none; }
+        input { background: #222; border: 1px solid #444; color: white; padding: 14px; width: 100%; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 14px; }
         input:focus { border-color: var(--accent); }
         
-        /* Status Pills */
-        .status-pending { background: rgba(234, 179, 8, 0.2); color: #fbbf24; border: 1px solid rgba(234, 179, 8, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; animation: pulse 2s infinite; }
-        .status-ready { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0); } 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
+        .btn-primary { background: linear-gradient(to right, #ea580c, #c2410c); color: white; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3); transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
 
-        /* Sidebar & Modals from SGMC */
-        .sidebar { position: fixed; top: 0; right: 0; bottom: 0; width: 280px; background: var(--bg); z-index: 100; transform: translateX(100%); transition: 0.3s; border-left: 1px solid var(--border); }
-        .sidebar.open { transform: translateX(0); }
-        .fs-modal { position: fixed; inset: 0; background: var(--bg); z-index: 120; transform: translateY(100%); transition: 0.3s; overflow-y: auto; padding: 20px; }
-        .fs-modal.open { transform: translateY(0); }
-        .popup-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 150; display: none; align-items: center; justify-content: center; }
-        .popup-modal.open { display: flex; }
+        /* Pending Animation */
+        .pulse-ring { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--accent); animation: ring 2s infinite; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; }
+        @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(249, 115, 22, 0); } 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); } }
+
+        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-new { background: #10b98120; color: #10b981; border: 1px solid #10b98150; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
+    <div id="auth-screen" class="full-screen">
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-orange-500 mb-2">Nearby Bazar</h1>
             <p class="text-gray-500 text-sm">Vendor Partner App</p>
         </div>
 
         <div id="login-form">
-            <input type="text" id="login-id" placeholder="Shop ID (e.g. gupta01)">
+            <input type="text" id="login-id" placeholder="Shop Username (e.g. guptachai)">
             <input type="password" id="login-pass" placeholder="Password">
-            <button onclick="login()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold mb-4">Login to Shop</button>
-            <p class="text-center text-gray-500 text-xs mt-4">New here? <span onclick="toggleAuthMode('register')" class="text-blue-400 cursor-pointer">Register Shop</span></p>
+            <button onclick="window.login()" class="btn-primary mb-4">Login</button>
+            <p class="text-center text-gray-500 text-xs mt-4">New Business? <span onclick="toggleAuth('register')" class="text-orange-400 cursor-pointer font-bold">Register Here</span></p>
         </div>
 
         <div id="register-form" class="hidden">
+            <h2 class="text-xl font-bold mb-4 text-white">New Registration</h2>
             <input type="text" id="reg-name" placeholder="Shop Name (e.g. Gupta Chai)">
             <input type="text" id="reg-owner" placeholder="Owner Name">
-            <input type="tel" id="reg-phone" placeholder="Phone Number">
-            <input type="text" id="reg-id" placeholder="Create Shop ID (Unique)">
+            <input type="tel" id="reg-phone" placeholder="Mobile Number">
+            <input type="text" id="reg-id" placeholder="Create Shop Username (Unique)">
             <input type="password" id="reg-pass" placeholder="Create Password">
-            <input type="text" id="reg-upi" placeholder="UPI ID (for payments)">
-            <button onclick="registerShop()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold mb-4">Submit Application</button>
-            <p class="text-center text-gray-500 text-xs mt-4">Already have ID? <span onclick="toggleAuthMode('login')" class="text-blue-400 cursor-pointer">Login</span></p>
+            <input type="text" id="reg-upi" placeholder="UPI ID (e.g. 9876543210@ybl)">
+            <button onclick="window.registerShop()" class="btn-primary mb-4" id="btn-reg">Submit Application</button>
+            <p class="text-center text-gray-500 text-xs mt-4">Have an ID? <span onclick="toggleAuth('login')" class="text-orange-400 cursor-pointer font-bold">Login Here</span></p>
         </div>
     </div>
 
-    <div id="main-app" class="hidden p-2">
+    <div id="status-screen" class="full-screen hidden text-center">
+        <div class="pulse-ring"><i class="fas fa-hourglass-half text-3xl text-orange-500"></i></div>
+        <h2 class="text-2xl font-bold text-white mb-2">Application Under Review</h2>
+        <p class="text-gray-400 text-sm mb-6 px-4">Your shop <span id="status-shop-name" class="text-orange-400 font-bold"></span> is waiting for Superadmin approval.</p>
+        
+        <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 mx-4 text-left">
+            <p class="text-xs text-gray-500 uppercase mb-2">Live Status</p>
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                <span class="text-yellow-500 font-bold text-sm">Pending Verification...</span>
+            </div>
+        </div>
+        <button onclick="window.logout()" class="mt-8 text-gray-500 text-xs underline">Logout / Switch Account</button>
+    </div>
+
+    <div id="main-app" class="hidden p-4">
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-orange-500" id="dash-shop-name">My Shop</h1>
                 <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● LIVE DASHBOARD</p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="toggleSound()" class="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center text-white">
-                    <i id="sound-icon" class="fas fa-volume-up"></i>
-                </button>
-                <button onclick="toggleSidebar()" class="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center text-white">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-        </div>
-
-        <div id="sidebar" class="sidebar p-6 flex flex-col h-full">
-            <h2 class="text-xl font-bold text-orange-500 mb-8">Menu</h2>
-            <div class="space-y-3">
-                <div class="aesthetic-card p-3 flex justify-between items-center">
-                    <span>Status</span>
-                    <button id="shop-toggle-btn" onclick="toggleShopStatus()" class="px-3 py-1 rounded text-xs font-bold bg-green-600 text-white">OPEN</button>
-                </div>
-                <button onclick="openMenuControl(); toggleSidebar()" class="w-full text-left p-3 rounded-xl border border-gray-800 text-sm font-bold text-white"><i class="fas fa-boxes text-orange-400 mr-2"></i> Inventory</button>
-                <button onclick="logout()" class="w-full text-left p-3 rounded-xl border border-red-900/50 bg-red-900/10 text-red-400 text-sm font-bold mt-auto"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
-            </div>
+            <button onclick="window.logout()" class="w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center border border-gray-700">
+                <i class="fas fa-power-off"></i>
+            </button>
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="aesthetic-card text-center">
-                <span class="text-xs uppercase text-gray-500">Revenue</span>
-                <h2 class="text-2xl font-bold text-green-500 mt-1">₹<span id="today-sales">0</span></h2>
+            <div class="aesthetic-card text-center !mb-0">
+                <span class="text-xs uppercase text-gray-500">Today's Sale</span>
+                <h2 class="text-2xl font-bold text-green-500 mt-1">₹<span id="stat-sales">0</span></h2>
             </div>
-            <div class="aesthetic-card text-center">
-                <span class="text-xs uppercase text-gray-500">Active</span>
-                <h2 class="text-3xl font-bold text-yellow-500 mt-1" id="pending-count">0</h2>
+            <div class="aesthetic-card text-center !mb-0">
+                <span class="text-xs uppercase text-gray-500">Active Orders</span>
+                <h2 class="text-3xl font-bold text-yellow-500 mt-1" id="stat-active">0</h2>
             </div>
         </div>
 
-        <div id="live-orders" class="space-y-3 pb-20"></div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Live Orders</h3>
+            <button onclick="toggleShopStatus()" id="shop-status-btn" class="text-xs font-bold px-3 py-1 rounded bg-green-600 text-white">OPEN</button>
+        </div>
+
+        <div id="orders-list" class="space-y-3 pb-20">
+            <p class="text-center text-gray-600 mt-10 text-sm">Waiting for new orders...</p>
+        </div>
+        
+        <button onclick="openInventory()" class="fixed bottom-6 right-6 w-14 h-14 bg-orange-600 rounded-full text-white shadow-2xl flex items-center justify-center text-xl z-20">
+            <i class="fas fa-box"></i>
+        </button>
     </div>
 
-    <div id="menu-modal" class="fs-modal">
+    <div id="inventory-modal" class="fixed inset-0 bg-black z-50 hidden flex flex-col p-4">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="font-bold text-xl">Inventory</h3>
-            <button onclick="document.getElementById('menu-modal').classList.remove('open')"><i class="fas fa-times"></i></button>
+            <h2 class="text-2xl font-bold text-white">Inventory</h2>
+            <button onclick="document.getElementById('inventory-modal').classList.add('hidden')" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button>
         </div>
-        <div id="menu-list" class="space-y-2 mb-4"></div>
-        <button onclick="openAddItem()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-bold">Add Item</button>
+        <div id="inventory-list" class="flex-1 overflow-y-auto space-y-3"></div>
+        <button onclick="addNewItem()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold mt-4 shadow-lg sticky bottom-0">Add New Product</button>
     </div>
 
-    <div id="add-item-popup" class="popup-modal">
-        <div class="aesthetic-card w-full max-w-xs p-6">
-            <h3 class="font-bold mb-4">New Item</h3>
-            <input id="new-name" placeholder="Item Name">
-            <input id="new-price" type="number" placeholder="Price">
-            <input id="new-cat" placeholder="Category (Chai, Snacks)">
-            <div class="flex gap-2 mt-4">
-                <button onclick="document.getElementById('add-item-popup').classList.remove('open')" class="flex-1 bg-gray-800 py-2 rounded">Cancel</button>
-                <button onclick="saveNewItem()" class="flex-1 bg-orange-600 py-2 rounded font-bold text-white">Save</button>
-            </div>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot, updateDoc, setDoc, query, where, orderBy, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-    <audio id="order-sound"></audio>
-
-    <script>
+        // CONFIG (Tumhari API Key)
         const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "sgmc-16568.firebaseapp.com", projectId: "sgmc-16568", storageBucket: "sgmc-16568.firebasestorage.app", messagingSenderId: "339041646158", appId: "1:339041646158:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        let SHOP_ID = localStorage.getItem('nb_shop_id');
-        let soundEnabled = true;
-        let isRinging = false;
-        const audioEl = document.getElementById('order-sound');
-
-        // --- AUTH SYSTEM ---
-        function checkAuth() {
-            if(SHOP_ID) {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                initShop();
-            }
-        }
-
-        function toggleAuthMode(mode) {
+        // --- GLOBAL SCOPE FUNCTIONS (For HTML onclicks) ---
+        window.toggleAuth = (mode) => {
             document.getElementById('login-form').classList.toggle('hidden', mode === 'register');
             document.getElementById('register-form').classList.toggle('hidden', mode === 'login');
         }
 
-        function login() {
-            const id = document.getElementById('login-id').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
-            if(!id || !pass) return alert("Enter details");
+        // 1. REGISTER SHOP
+        window.registerShop = async () => {
+            const name = document.getElementById('reg-name').value.trim();
+            const owner = document.getElementById('reg-owner').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const id = document.getElementById('reg-id').value.trim().toLowerCase().replace(/\s/g, ''); // Remove spaces
+            const pass = document.getElementById('reg-pass').value.trim();
+            const upi = document.getElementById('reg-upi').value.trim();
 
-            db.collection('shops').doc(id).get().then(doc => {
-                if(doc.exists && doc.data().password === pass) {
-                    if(doc.data().status === 'suspended') return alert("This shop is suspended by Superadmin.");
-                    if(doc.data().status === 'pending') return alert("Verification Pending. Wait for approval.");
-                    
+            if (!name || !id || !pass || !phone) return Swal.fire("Error", "Please fill all required fields", "warning");
+
+            const btn = document.getElementById('btn-reg');
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // Check if ID exists
+                const docSnap = await getDoc(doc(db, "shops", id));
+                if (docSnap.exists()) {
+                    throw new Error("Shop Username already taken. Try another.");
+                }
+
+                // Handle Location (Fallback to 0,0 if fails)
+                let lat = 0, lng = 0;
+                try {
+                    const pos = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 5000});
+                    });
+                    lat = pos.coords.latitude;
+                    lng = pos.coords.longitude;
+                } catch (err) {
+                    console.warn("GPS failed, using default.");
+                }
+
+                // Save Data
+                await setDoc(doc(db, "shops", id), {
+                    shopId: id, shopName: name, ownerName: owner, phone: phone,
+                    password: pass, upiId: upi, location: {lat, lng},
+                    status: 'pending', isOpen: false,
+                    createdAt: serverTimestamp()
+                });
+
+                // Set Default Menu
+                await setDoc(doc(db, `shops/${id}/menu`, "items"), { customItems: [] });
+
+                // Success
+                localStorage.setItem('nb_shop_id', id);
+                checkAuth(); // Auto redirect to pending screen
+
+            } catch (error) {
+                Swal.fire("Registration Failed", error.message, "error");
+                btn.innerText = "Submit Application";
+                btn.disabled = false;
+            }
+        };
+
+        // 2. LOGIN
+        window.login = async () => {
+            const id = document.getElementById('login-id').value.trim().toLowerCase();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if (!id || !pass) return Swal.fire("Error", "Enter ID & Password", "warning");
+
+            try {
+                const docSnap = await getDoc(doc(db, "shops", id));
+                if (docSnap.exists() && docSnap.data().password === pass) {
                     localStorage.setItem('nb_shop_id', id);
-                    SHOP_ID = id;
                     checkAuth();
                 } else {
-                    alert("Invalid ID or Password");
+                    Swal.fire("Invalid", "Wrong ID or Password", "error");
                 }
-            }).catch(e => alert(e.message));
-        }
+            } catch (e) {
+                Swal.fire("Error", e.message, "error");
+            }
+        };
 
-        function registerShop() {
-            const data = {
-                shopName: document.getElementById('reg-name').value,
-                ownerName: document.getElementById('reg-owner').value,
-                phone: document.getElementById('reg-phone').value,
-                shopId: document.getElementById('reg-id').value.trim(),
-                password: document.getElementById('reg-pass').value,
-                upiId: document.getElementById('reg-upi').value,
-                status: 'pending',
-                isOpen: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if(!data.shopId || !data.password) return alert("Fill all fields");
-
-            db.collection('shops').doc(data.shopId).set(data)
-                .then(() => {
-                    // Create empty menu structure
-                    db.collection('shops').doc(data.shopId).collection('menu').doc('items').set({customItems:[]});
-                    alert("Application Sent! Wait for Superadmin approval.");
-                    toggleAuthMode('login');
-                })
-                .catch(e => alert("Error: " + e.message));
-        }
-
-        function logout() {
+        window.logout = () => {
             localStorage.removeItem('nb_shop_id');
             location.reload();
-        }
+        };
 
-        // --- SHOP LOGIC ---
-        function initShop() {
-            // Load Shop Details
-            db.collection('shops').doc(SHOP_ID).onSnapshot(doc => {
-                if(doc.exists) {
-                    const s = doc.data();
-                    if(s.status === 'suspended') { alert("Shop Suspended!"); logout(); }
-                    document.getElementById('dash-shop-name').innerText = s.shopName;
-                    updateShopStatusUI(s.isOpen);
-                }
-            });
+        // 3. MAIN AUTH CHECK & ROUTING
+        function checkAuth() {
+            const shopId = localStorage.getItem('nb_shop_id');
+            if (!shopId) return;
 
-            // Listen for Orders (Filtered by Shop ID)
-            // Querying 'orders' collection where shopId matches
-            // NOTE: In SGMC we used root 'orders', here we assume same but filtered.
-            // If you change architecture, change this query.
-            db.collection('orders').where('shopId', '==', SHOP_ID).orderBy('timestamp', 'desc').onSnapshot(snap => {
-                renderOrders(snap);
-            });
-        }
+            // Hide Auth Screen
+            document.getElementById('auth-screen').classList.add('hidden');
 
-        function renderOrders(snap) {
-            const list = document.getElementById('live-orders');
-            list.innerHTML = "";
-            let active = 0, sales = 0;
-
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.status === 'delivered' || d.status === 'completed') {
-                    sales += parseInt(d.totalAmount);
-                } else if(d.status !== 'cancelled' && d.status !== 'rejected') {
-                    active++;
-                    const itemNames = d.items.map(i => `${i.qty} x ${i.name}`).join(', ');
+            // Listen to Shop Status (Realtime)
+            onSnapshot(doc(db, "shops", shopId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
                     
-                    list.innerHTML += `
-                    <div class="aesthetic-card">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="font-bold text-lg text-white">${d.customerName}</h3>
-                                <p class="text-xs text-gray-400">${itemNames}</p>
-                            </div>
-                            <span class="status-pending">${d.status}</span>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-orange-500 font-bold text-xl">₹${d.totalAmount}</span>
-                            <div class="flex gap-2">
-                                ${d.status === 'pending' ? 
-                                `<button onclick="updateOrderStatus('${doc.id}', 'cooking')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">Accept</button>
-                                 <button onclick="updateOrderStatus('${doc.id}', 'rejected')" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold">Reject</button>` : 
-                                 d.status === 'cooking' ? 
-                                 `<button onclick="updateOrderStatus('${doc.id}', 'ready')" class="bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold">Ready</button>` :
-                                 `<button onclick="updateOrderStatus('${doc.id}', 'completed')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold">Complete</button>`
-                                }
-                            </div>
-                        </div>
-                    </div>`;
+                    if (data.status === 'pending') {
+                        // SHOW PENDING SCREEN
+                        document.getElementById('main-app').classList.add('hidden');
+                        document.getElementById('status-screen').classList.remove('hidden');
+                        document.getElementById('status-shop-name').innerText = data.shopName;
+                    } 
+                    else if (data.status === 'suspended') {
+                        Swal.fire("Account Suspended", "Contact Superadmin.", "error").then(window.logout);
+                    } 
+                    else if (data.status === 'verified') {
+                        // SHOW DASHBOARD
+                        document.getElementById('status-screen').classList.add('hidden');
+                        document.getElementById('main-app').classList.remove('hidden');
+                        initDashboard(shopId, data);
+                    }
+                } else {
+                    // Shop deleted by admin
+                    Swal.fire("Error", "Shop not found.", "error").then(window.logout);
                 }
             });
-
-            document.getElementById('pending-count').innerText = active;
-            document.getElementById('today-sales').innerText = sales;
-
-            if(active > 0) playAlarm();
         }
 
-        function updateOrderStatus(oid, status) {
-            db.collection('orders').doc(oid).update({status: status});
+        // 4. DASHBOARD LOGIC
+        function initDashboard(shopId, shopData) {
+            document.getElementById('dash-shop-name').innerText = shopData.shopName;
+            updateStatusBtn(shopData.isOpen);
+
+            // Listen to Orders
+            const q = query(collection(db, "orders"), where("shopId", "==", shopId), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snap) => {
+                const list = document.getElementById('orders-list');
+                let html = "";
+                let activeCount = 0;
+                let todaySales = 0;
+
+                snap.forEach(d => {
+                    const o = d.data();
+                    const oid = d.id;
+                    
+                    // Sales Calc (Basic)
+                    if(o.status === 'completed') todaySales += (parseInt(o.totalAmount) || 0);
+
+                    if(o.status !== 'completed' && o.status !== 'rejected' && o.status !== 'cancelled') {
+                        activeCount++;
+                        const itemsStr = o.items.map(i => `${i.qty} x ${i.name}`).join(', ');
+                        
+                        html += `
+                        <div class="aesthetic-card border-l-4 ${o.status==='pending'?'border-yellow-500':o.status==='cooking'?'border-blue-500':'border-green-500'}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-white text-lg">${o.customerName}</h4>
+                                    <p class="text-xs text-gray-400">${itemsStr}</p>
+                                </div>
+                                <span class="status-pill status-new">${o.status}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-800">
+                                <span class="font-bold text-orange-500 text-xl">₹${o.totalAmount}</span>
+                                <div class="flex gap-2">
+                                    ${getButtons(oid, o.status)}
+                                </div>
+                            </div>
+                        </div>`;
+                    }
+                });
+
+                if(html) list.innerHTML = html;
+                else list.innerHTML = '<p class="text-center text-gray-600 mt-10 text-sm">No active orders</p>';
+                
+                document.getElementById('stat-active').innerText = activeCount;
+                document.getElementById('stat-sales').innerText = todaySales;
+            });
         }
 
-        // --- INVENTORY ---
-        function openMenuControl() {
-            document.getElementById('menu-modal').classList.add('open');
-            db.collection('shops').doc(SHOP_ID).collection('menu').doc('items').onSnapshot(doc => {
-                const items = doc.exists ? doc.data().customItems || [] : [];
-                document.getElementById('menu-list').innerHTML = items.map((i, idx) => `
+        function getButtons(id, status) {
+            if(status === 'pending') return `<button onclick="window.setStatus('${id}','cooking')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Accept</button><button onclick="window.setStatus('${id}','rejected')" class="bg-red-900/50 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-800">Reject</button>`;
+            if(status === 'cooking') return `<button onclick="window.setStatus('${id}','ready')" class="bg-yellow-600 text-black px-4 py-2 rounded-lg text-xs font-bold">Mark Ready</button>`;
+            if(status === 'ready') return `<button onclick="window.setStatus('${id}','completed')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Complete</button>`;
+            return '';
+        }
+
+        window.setStatus = async (id, st) => {
+            await updateDoc(doc(db, "orders", id), { status: st });
+        };
+
+        // 5. INVENTORY & SETTINGS
+        window.toggleShopStatus = async () => {
+            const shopId = localStorage.getItem('nb_shop_id');
+            const btn = document.getElementById('shop-status-btn');
+            const current = btn.innerText === "OPEN";
+            await updateDoc(doc(db, "shops", shopId), { isOpen: !current });
+        };
+
+        function updateStatusBtn(isOpen) {
+            const btn = document.getElementById('shop-status-btn');
+            btn.innerText = isOpen ? "OPEN" : "CLOSED";
+            btn.className = isOpen ? "text-xs font-bold px-3 py-1 rounded bg-green-600 text-white" : "text-xs font-bold px-3 py-1 rounded bg-red-600 text-white";
+        }
+
+        window.openInventory = () => {
+            document.getElementById('inventory-modal').classList.remove('hidden');
+            const shopId = localStorage.getItem('nb_shop_id');
+            
+            onSnapshot(doc(db, `shops/${shopId}/menu`, "items"), (d) => {
+                const list = document.getElementById('inventory-list');
+                const items = d.exists() ? d.data().customItems || [] : [];
+                
+                list.innerHTML = items.map((item, idx) => `
                     <div class="aesthetic-card flex justify-between items-center p-3 mb-2">
                         <div>
-                            <p class="font-bold text-white">${i.name}</p>
-                            <p class="text-xs text-gray-400">₹${i.price}</p>
+                            <p class="font-bold text-white">${item.name}</p>
+                            <p class="text-xs text-gray-400">Price: ₹${item.price} | Cat: ${item.category}</p>
                         </div>
-                        <button onclick="deleteMenuItem(${idx})" class="text-red-500"><i class="fas fa-trash"></i></button>
+                        <button onclick="window.deleteItem(${idx})" class="w-8 h-8 bg-red-900/30 text-red-500 rounded flex items-center justify-center"><i class="fas fa-trash"></i></button>
                     </div>
                 `).join('');
             });
-        }
+        };
 
-        function openAddItem() { document.getElementById('add-item-popup').classList.add('open'); }
-        
-        function saveNewItem() {
-            const name = document.getElementById('new-name').value;
-            const price = parseInt(document.getElementById('new-price').value);
-            const cat = document.getElementById('new-cat').value;
-            
-            if(name && price) {
-                const ref = db.collection('shops').doc(SHOP_ID).collection('menu').doc('items');
-                db.runTransaction(async (t) => {
-                    const doc = await t.get(ref);
-                    const data = doc.exists ? doc.data().customItems || [] : [];
-                    data.push({id: Date.now(), name, price, category: cat, available: true});
-                    t.set(ref, {customItems: data}, {merge: true});
-                }).then(() => {
-                    document.getElementById('add-item-popup').classList.remove('open');
-                });
-            }
-        }
-
-        function deleteMenuItem(idx) {
-            const ref = db.collection('shops').doc(SHOP_ID).collection('menu').doc('items');
-            db.runTransaction(async (t) => {
-                const doc = await t.get(ref);
-                const data = doc.data().customItems;
-                data.splice(idx, 1);
-                t.update(ref, {customItems: data});
+        window.addNewItem = async () => {
+            const { value: formValues } = await Swal.fire({
+                title: 'Add Item',
+                html: '<input id="swal-name" class="swal2-input" placeholder="Item Name">' +
+                      '<input id="swal-price" type="number" class="swal2-input" placeholder="Price">' +
+                      '<input id="swal-cat" class="swal2-input" placeholder="Category (e.g. Chai)">',
+                focusConfirm: false,
+                preConfirm: () => {
+                    return [
+                        document.getElementById('swal-name').value,
+                        document.getElementById('swal-price').value,
+                        document.getElementById('swal-cat').value
+                    ]
+                }
             });
-        }
 
-        // --- UTILS ---
-        function toggleShopStatus() {
-            const btn = document.getElementById('shop-toggle-btn');
-            const isOpen = btn.innerText === "OPEN";
-            db.collection('shops').doc(SHOP_ID).update({isOpen: !isOpen});
-        }
+            if (formValues && formValues[0]) {
+                const shopId = localStorage.getItem('nb_shop_id');
+                const ref = doc(db, `shops/${shopId}/menu`, "items");
+                // Get current, add new, save
+                const snap = await getDoc(ref);
+                let items = snap.exists() ? snap.data().customItems || [] : [];
+                items.push({
+                    id: Date.now(),
+                    name: formValues[0],
+                    price: parseInt(formValues[1]),
+                    category: formValues[2] || 'General',
+                    available: true
+                });
+                await setDoc(ref, { customItems: items }, { merge: true });
+                Swal.fire("Added", "", "success");
+            }
+        };
 
-        function updateShopStatusUI(isOpen) {
-            const btn = document.getElementById('shop-toggle-btn');
-            btn.innerText = isOpen ? "OPEN" : "CLOSED";
-            btn.className = isOpen ? "px-3 py-1 rounded text-xs font-bold bg-green-600 text-white" : "px-3 py-1 rounded text-xs font-bold bg-red-600 text-white";
-        }
+        window.deleteItem = async (idx) => {
+            const shopId = localStorage.getItem('nb_shop_id');
+            const ref = doc(db, `shops/${shopId}/menu`, "items");
+            const snap = await getDoc(ref);
+            let items = snap.data().customItems;
+            items.splice(idx, 1);
+            await updateDoc(ref, { customItems: items });
+        };
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        
-        function playAlarm() { 
-            if(soundEnabled && !isRinging) { 
-                audioEl.src = "https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3"; 
-                audioEl.loop = true; 
-                audioEl.play().catch(e=>console.log(e)); 
-                isRinging = true; 
-                document.body.onclick = () => { audioEl.pause(); isRinging = false; };
-            } 
-        }
-        function toggleSound() { soundEnabled = !soundEnabled; document.getElementById('sound-icon').className = soundEnabled ? "fas fa-volume-up" : "fas fa-volume-mute"; }
-
+        // Start
         checkAuth();
+
     </script>
 </body>
 </html>
