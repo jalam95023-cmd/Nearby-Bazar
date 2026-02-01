@@ -119,34 +119,44 @@
         <button onclick="addNewItem()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold mt-4 shadow-lg sticky bottom-0">Add New Product</button>
     </div>
 
+    <audio id="order-sound"></audio>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot, updateDoc, setDoc, query, where, orderBy, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        // CONFIG (Tumhari API Key)
-        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "sgmc-16568.firebaseapp.com", projectId: "sgmc-16568", storageBucket: "sgmc-16568.firebasestorage.app", messagingSenderId: "339041646158", appId: "1:339041646158:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
+        // --- CORRECT NEARBY BAZAR API KEY ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko", 
+            authDomain: "nearby-bazar.firebaseapp.com", 
+            projectId: "nearby-bazar", 
+            storageBucket: "nearby-bazar.firebasestorage.app", 
+            messagingSenderId: "183262510084", 
+            appId: "1:183262510084:web:909fa3aac2f2429a7d8951" 
+        };
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- GLOBAL SCOPE FUNCTIONS (For HTML onclicks) ---
+        // --- GLOBAL SCOPE FUNCTIONS ---
         window.toggleAuth = (mode) => {
             document.getElementById('login-form').classList.toggle('hidden', mode === 'register');
             document.getElementById('register-form').classList.toggle('hidden', mode === 'login');
         }
 
-        // 1. REGISTER SHOP
+        // 1. REGISTER SHOP (Fixed Location Issue)
         window.registerShop = async () => {
             const name = document.getElementById('reg-name').value.trim();
             const owner = document.getElementById('reg-owner').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
-            const id = document.getElementById('reg-id').value.trim().toLowerCase().replace(/\s/g, ''); // Remove spaces
+            const id = document.getElementById('reg-id').value.trim().toLowerCase().replace(/\s/g, ''); 
             const pass = document.getElementById('reg-pass').value.trim();
             const upi = document.getElementById('reg-upi').value.trim();
 
             if (!name || !id || !pass || !phone) return Swal.fire("Error", "Please fill all required fields", "warning");
 
             const btn = document.getElementById('btn-reg');
+            const originalText = btn.innerText;
             btn.innerText = "Processing...";
             btn.disabled = true;
 
@@ -157,16 +167,20 @@
                     throw new Error("Shop Username already taken. Try another.");
                 }
 
-                // Handle Location (Fallback to 0,0 if fails)
+                // Default location (Fallback)
                 let lat = 0, lng = 0;
-                try {
-                    const pos = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 5000});
-                    });
-                    lat = pos.coords.latitude;
-                    lng = pos.coords.longitude;
-                } catch (err) {
-                    console.warn("GPS failed, using default.");
+
+                // Try to get location, but don't block if failed
+                if(navigator.geolocation) {
+                    try {
+                        const pos = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 3000}); // 3s timeout
+                        });
+                        lat = pos.coords.latitude;
+                        lng = pos.coords.longitude;
+                    } catch (e) {
+                        console.log("GPS Skipped/Failed");
+                    }
                 }
 
                 // Save Data
@@ -177,16 +191,16 @@
                     createdAt: serverTimestamp()
                 });
 
-                // Set Default Menu
+                // Set Default Menu Structure
                 await setDoc(doc(db, `shops/${id}/menu`, "items"), { customItems: [] });
 
                 // Success
                 localStorage.setItem('nb_shop_id', id);
-                checkAuth(); // Auto redirect to pending screen
+                checkAuth(); // Auto redirect
 
             } catch (error) {
                 Swal.fire("Registration Failed", error.message, "error");
-                btn.innerText = "Submit Application";
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         };
@@ -216,21 +230,18 @@
             location.reload();
         };
 
-        // 3. MAIN AUTH CHECK & ROUTING
+        // 3. MAIN AUTH CHECK
         function checkAuth() {
             const shopId = localStorage.getItem('nb_shop_id');
             if (!shopId) return;
 
-            // Hide Auth Screen
             document.getElementById('auth-screen').classList.add('hidden');
 
-            // Listen to Shop Status (Realtime)
             onSnapshot(doc(db, "shops", shopId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
                     if (data.status === 'pending') {
-                        // SHOW PENDING SCREEN
                         document.getElementById('main-app').classList.add('hidden');
                         document.getElementById('status-screen').classList.remove('hidden');
                         document.getElementById('status-shop-name').innerText = data.shopName;
@@ -239,13 +250,11 @@
                         Swal.fire("Account Suspended", "Contact Superadmin.", "error").then(window.logout);
                     } 
                     else if (data.status === 'verified') {
-                        // SHOW DASHBOARD
                         document.getElementById('status-screen').classList.add('hidden');
                         document.getElementById('main-app').classList.remove('hidden');
                         initDashboard(shopId, data);
                     }
                 } else {
-                    // Shop deleted by admin
                     Swal.fire("Error", "Shop not found.", "error").then(window.logout);
                 }
             });
@@ -256,7 +265,6 @@
             document.getElementById('dash-shop-name').innerText = shopData.shopName;
             updateStatusBtn(shopData.isOpen);
 
-            // Listen to Orders
             const q = query(collection(db, "orders"), where("shopId", "==", shopId), orderBy("timestamp", "desc"));
             onSnapshot(q, (snap) => {
                 const list = document.getElementById('orders-list');
@@ -268,12 +276,11 @@
                     const o = d.data();
                     const oid = d.id;
                     
-                    // Sales Calc (Basic)
                     if(o.status === 'completed') todaySales += (parseInt(o.totalAmount) || 0);
 
                     if(o.status !== 'completed' && o.status !== 'rejected' && o.status !== 'cancelled') {
                         activeCount++;
-                        const itemsStr = o.items.map(i => `${i.qty} x ${i.name}`).join(', ');
+                        const itemsStr = o.items ? o.items.map(i => `${i.qty} x ${i.name}`).join(', ') : 'Unknown Items';
                         
                         html += `
                         <div class="aesthetic-card border-l-4 ${o.status==='pending'?'border-yellow-500':o.status==='cooking'?'border-blue-500':'border-green-500'}">
@@ -366,7 +373,6 @@
             if (formValues && formValues[0]) {
                 const shopId = localStorage.getItem('nb_shop_id');
                 const ref = doc(db, `shops/${shopId}/menu`, "items");
-                // Get current, add new, save
                 const snap = await getDoc(ref);
                 let items = snap.exists() ? snap.data().customItems || [] : [];
                 items.push({
