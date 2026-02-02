@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Super Admin • Nearby Bazar</title>
     
+    <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f0f0f">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/869/869636.png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/869/869636.png">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -18,168 +17,135 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        /* Dark Aesthetic Theme */
-        :root { --bg: #050505; --card: #141414; --border: #333; --accent: #F97316; --text: #fff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        :root { --bg: #0f0f0f; --card: #1a1a1a; --border: #333; --accent: #F97316; --text: #fff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: 80px; }
         
-        /* Cards & UI */
-        .glass-card { background: rgba(20, 20, 20, 0.95); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; position: relative; }
-        .stat-card { background: #111; border: 1px solid #222; padding: 20px; border-radius: 16px; position: relative; overflow: hidden; cursor: pointer; transition: 0.2s; }
-        .stat-card:active { transform: scale(0.98); background: #161616; }
-        .stat-card::after { content:''; position:absolute; top:0; right:0; width:60px; height:60px; background:linear-gradient(135deg, transparent 50%, rgba(249, 115, 22, 0.1)); }
-        
-        /* Status Pills */
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .b-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
-        .b-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .b-yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
-
-        /* Screens & Modals */
         .screen { position: fixed; inset: 0; background: var(--bg); z-index: 10; display: none; flex-direction: column; overflow-y: auto; }
         .screen.active { display: flex; }
-        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; justify-content: center; items-end; }
-        .popup.open { display: flex; animation: slideUp 0.3s; }
-        .popup-content { background: #111; width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #333; max-height: 90vh; overflow-y: auto; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        /* List Items */
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #222; cursor: pointer; }
-        .list-item:last-child { border-bottom: none; }
-        .avatar { width: 40px; height: 40px; border-radius: 10px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #666; }
+        
+        .glass-header { position: sticky; top: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 16px; z-index: 50; display: flex; justify-content: space-between; align-items: center; }
+        
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-card::after { content:''; position:absolute; top:0; right:0; width:50px; height:50px; background:linear-gradient(135deg, transparent 50%, rgba(249, 115, 22, 0.1)); }
+        
+        .list-item { background: var(--card); margin-bottom: 10px; padding: 16px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Sidebar */
+        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; background: #111; z-index: 200; transform: translateX(-100%); transition: 0.3s; border-right: 1px solid var(--border); }
+        .sidebar.open { transform: translateX(0); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 150; display: none; }
+        .overlay.open { display: block; }
+        
+        .menu-btn { width: 40px; height: 40px; border-radius: 10px; background: #222; color: white; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="scr-auth" class="screen active justify-center p-6">
         <div class="text-center mb-10">
-            <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-16 h-16 mx-auto mb-4 opacity-80">
+            <div class="w-20 h-20 bg-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl text-white font-bold shadow-lg shadow-orange-900/50">NB</div>
             <h1 class="text-3xl font-bold text-white mb-1">Super Admin</h1>
             <p class="text-xs text-gray-500 uppercase tracking-widest">Nearby Bazar Control</p>
         </div>
-        <div class="glass-card p-6">
+        <div class="bg-[#1a1a1a] p-6 rounded-2xl border border-[#333]">
             <input type="text" id="adm-user" placeholder="Username" class="w-full bg-[#222] border border-[#333] p-3 rounded-xl text-white mb-3 outline-none focus:border-orange-500">
             <input type="password" id="adm-pass" placeholder="Password" class="w-full bg-[#222] border-[#333] border p-3 rounded-xl text-white mb-6 outline-none focus:border-orange-500">
             <button onclick="login()" class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition">SECURE LOGIN</button>
         </div>
     </div>
 
-    <div id="scr-home" class="screen p-6 justify-center">
+    <div id="scr-home" class="screen p-6 pt-20">
         <div class="text-center mb-12">
-            <h2 class="text-2xl font-bold text-white">Welcome, Boss</h2>
-            <p class="text-gray-500 text-sm">What would you like to manage?</p>
+            <h2 class="text-3xl font-bold text-white mb-1">Welcome, Boss</h2>
+            <p class="text-gray-500 text-sm">Select a module to manage</p>
         </div>
-        <div class="grid gap-4">
-            <div onclick="openDashboard('shops')" class="glass-card p-6 flex items-center gap-4 cursor-pointer hover:border-orange-500 transition">
-                <div class="w-14 h-14 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center text-2xl"><i class="fas fa-store"></i></div>
-                <div><h3 class="font-bold text-lg text-white">Manage Shops</h3><p class="text-xs text-gray-400">Approvals, Revenue, Settings</p></div>
-                <i class="fas fa-chevron-right ml-auto text-gray-600"></i>
-            </div>
-            <div onclick="openDashboard('users')" class="glass-card p-6 flex items-center gap-4 cursor-pointer hover:border-green-500 transition">
-                <div class="w-14 h-14 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-2xl"><i class="fas fa-users"></i></div>
-                <div><h3 class="font-bold text-lg text-white">Manage Users</h3><p class="text-xs text-gray-400">Database, History, Support</p></div>
-                <i class="fas fa-chevron-right ml-auto text-gray-600"></i>
-            </div>
+        
+        <div onclick="openDashboard('shops')" class="bg-[#1a1a1a] border border-[#333] p-6 rounded-2xl mb-4 flex items-center gap-4 cursor-pointer hover:border-orange-500 transition active:scale-95">
+            <div class="w-14 h-14 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center text-2xl"><i class="fas fa-store"></i></div>
+            <div><h3 class="font-bold text-lg text-white">Manage Shops</h3><p class="text-xs text-gray-400">Approvals, Revenue, Settings</p></div>
+            <i class="fas fa-chevron-right ml-auto text-gray-600"></i>
         </div>
-        <button onclick="logout()" class="mt-12 text-red-500 text-sm font-bold flex items-center justify-center gap-2"><i class="fas fa-sign-out-alt"></i> Logout</button>
+
+        <div onclick="openDashboard('users')" class="bg-[#1a1a1a] border border-[#333] p-6 rounded-2xl mb-4 flex items-center gap-4 cursor-pointer hover:border-green-500 transition active:scale-95">
+            <div class="w-14 h-14 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-2xl"><i class="fas fa-users"></i></div>
+            <div><h3 class="font-bold text-lg text-white">Manage Users</h3><p class="text-xs text-gray-400">Database, History, Support</p></div>
+            <i class="fas fa-chevron-right ml-auto text-gray-600"></i>
+        </div>
+
+        <button onclick="installApp()" id="install-btn" class="hidden mt-8 w-full bg-[#222] text-white py-3 rounded-xl border border-[#333] flex items-center justify-center gap-2"><i class="fas fa-download"></i> Install App</button>
+        
+        <button onclick="logout()" class="mt-4 text-red-500 text-sm font-bold flex items-center justify-center gap-2 w-full py-3"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
 
-    <div id="scr-dash" class="screen">
-        <div class="sticky top-0 bg-[#050505]/95 backdrop-blur p-4 border-b border-[#222] flex justify-between items-center z-50">
-            <button onclick="showScreen('scr-home')" class="w-10 h-10 rounded-full bg-[#111] text-gray-400"><i class="fas fa-arrow-left"></i></button>
+    <div id="scr-shops" class="screen">
+        <div class="glass-header">
+            <button onclick="toggleSidebar()" class="menu-btn"><i class="fas fa-bars"></i></button>
             <h2 class="text-lg font-bold text-white">Shop Manager</h2>
-            <div class="w-10"></div>
+            <button onclick="showScreen('scr-home')" class="menu-btn"><i class="fas fa-home"></i></button>
         </div>
 
         <div class="grid grid-cols-2 gap-3 p-4">
-            <div class="stat-card" onclick="renderShopList('active')">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Active Shops</p>
-                <h2 class="text-3xl font-bold text-white mt-1" id="cnt-active">0</h2>
+            <div class="stat-card">
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Active</p>
+                <h2 class="text-2xl font-bold text-white mt-1" id="cnt-active">0</h2>
             </div>
-            <div class="stat-card" onclick="renderRevenue()">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Total Revenue</p>
-                <h2 class="text-3xl font-bold text-green-500 mt-1">₹<span id="cnt-rev">0</span></h2>
-            </div>
-            <div class="stat-card" onclick="renderShopList('pending')">
+            <div class="stat-card">
                 <p class="text-[10px] text-gray-500 uppercase font-bold">Pending</p>
-                <h2 class="text-3xl font-bold text-yellow-500 mt-1" id="cnt-pending">0</h2>
-                <div id="dot-pending" class="w-2 h-2 bg-red-500 rounded-full absolute top-3 right-3 hidden"></div>
-            </div>
-            <div class="stat-card" onclick="renderAllOrders()">
-                <p class="text-[10px] text-gray-500 uppercase font-bold">Total Orders</p>
-                <h2 class="text-3xl font-bold text-blue-500 mt-1" id="cnt-orders">0</h2>
+                <h2 class="text-2xl font-bold text-yellow-500 mt-1" id="cnt-pending">0</h2>
             </div>
         </div>
 
-        <div class="p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-lg" id="list-title">Active Shops</h3>
-                <span class="text-xs text-gray-500 bg-[#111] px-2 py-1 rounded" id="list-count">0 found</span>
-            </div>
-            <div id="dynamic-list" class="glass-card">
-                <p class="p-6 text-center text-gray-500 text-sm">Select a card above to view details.</p>
-            </div>
+        <div class="p-4 pt-0">
+            <h3 class="font-bold text-white text-lg mb-4">All Shops</h3>
+            <div id="shop-list" class="space-y-2"></div>
         </div>
     </div>
 
-    <div id="pop-shop" class="popup">
-        <div class="popup-content relative">
-            <button onclick="closePopup()" class="absolute top-6 right-6 text-gray-500"><i class="fas fa-times text-xl"></i></button>
-            <div class="flex items-center gap-4 mb-6">
-                <div class="w-16 h-16 rounded-2xl bg-orange-600 flex items-center justify-center text-3xl text-white font-bold" id="dt-icon">S</div>
-                <div>
-                    <h2 class="text-2xl font-bold text-white leading-none" id="dt-name">Shop Name</h2>
-                    <p class="text-sm text-gray-400 mt-1" id="dt-owner">Owner Name</p>
-                    <span id="dt-status" class="badge b-green mt-2 inline-block">Active</span>
-                </div>
-            </div>
+    <div id="scr-users" class="screen">
+        <div class="glass-header">
+            <button onclick="toggleSidebar()" class="menu-btn"><i class="fas fa-bars"></i></button>
+            <h2 class="text-lg font-bold text-white">User Manager</h2>
+            <button onclick="showScreen('scr-home')" class="menu-btn"><i class="fas fa-home"></i></button>
+        </div>
 
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="bg-[#1a1a1a] p-3 rounded-xl border border-[#333]">
-                    <p class="text-[10px] text-gray-500 uppercase">Phone</p>
-                    <p class="font-mono text-sm text-white" id="dt-phone">+91 0000000000</p>
-                </div>
-                <div class="bg-[#1a1a1a] p-3 rounded-xl border border-[#333]">
-                    <p class="text-[10px] text-gray-500 uppercase">UPI ID</p>
-                    <p class="font-mono text-sm text-white truncate" id="dt-upi">user@ybl</p>
-                </div>
+        <div class="grid grid-cols-2 gap-3 p-4">
+            <div class="stat-card">
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Total Users</p>
+                <h2 class="text-2xl font-bold text-white mt-1" id="cnt-users">0</h2>
             </div>
+            <div class="stat-card">
+                <p class="text-[10px] text-gray-500 uppercase font-bold">Today Active</p>
+                <h2 class="text-2xl font-bold text-green-500 mt-1" id="cnt-active-users">0</h2>
+            </div>
+        </div>
 
-            <h3 class="font-bold text-white text-sm mb-3">Quick Actions</h3>
-            <div class="grid grid-cols-3 gap-3 mb-6">
-                <a id="btn-call" href="#" class="bg-[#222] text-green-400 p-3 rounded-xl text-center font-bold text-xs flex flex-col gap-1 items-center"><i class="fas fa-phone text-lg"></i> Call</a>
-                <a id="btn-wa" href="#" class="bg-[#222] text-green-500 p-3 rounded-xl text-center font-bold text-xs flex flex-col gap-1 items-center"><i class="fab fa-whatsapp text-lg"></i> Chat</a>
-                <button onclick="toggleBan()" id="btn-ban" class="bg-[#222] text-red-500 p-3 rounded-xl text-center font-bold text-xs flex flex-col gap-1 items-center"><i class="fas fa-ban text-lg"></i> Suspend</button>
-            </div>
-
-            <div id="approval-actions" class="hidden">
-                <button onclick="approveShop()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl mb-3 shadow-lg shadow-green-900/20">APPROVE SHOP</button>
-                <button onclick="rejectShop()" class="w-full bg-red-900/30 text-red-400 font-bold py-3 rounded-xl border border-red-900/50">REJECT REQUEST</button>
-            </div>
+        <div class="p-4 pt-0">
+            <h3 class="font-bold text-white text-lg mb-4">User Database</h3>
+            <div id="user-list" class="space-y-2"></div>
         </div>
     </div>
 
-    <div id="pop-rev" class="popup">
-        <div class="popup-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white">Revenue & Plans</h2>
-                <button onclick="closePopup()" class="text-gray-500"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="bg-gradient-to-r from-green-900 to-green-800 p-6 rounded-2xl mb-6 text-center border border-green-700">
-                <p class="text-green-200 text-sm uppercase font-bold tracking-widest mb-1">Total Platform Revenue</p>
-                <h1 class="text-4xl font-bold text-white">₹<span id="rev-total">0</span></h1>
-            </div>
-            <h3 class="font-bold text-white text-sm mb-3">Subscription Status</h3>
-            <div id="sub-list" class="space-y-2"></div>
+    <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+    <div id="sidebar" class="sidebar p-6 flex flex-col">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-orange-500">Nearby Bazar</h2>
+            <p class="text-xs text-gray-500">Admin Control</p>
         </div>
+        <div class="space-y-4 flex-1">
+            <button onclick="showScreen('scr-shops'); toggleSidebar()" class="text-gray-300 font-bold flex items-center gap-3"><i class="fas fa-store w-6"></i> Shops</button>
+            <button onclick="showScreen('scr-users'); toggleSidebar()" class="text-gray-300 font-bold flex items-center gap-3"><i class="fas fa-users w-6"></i> Users</button>
+            <button onclick="alert('Settings coming soon')" class="text-gray-300 font-bold flex items-center gap-3"><i class="fas fa-cog w-6"></i> Settings</button>
+        </div>
+        <button onclick="logout()" class="text-red-500 font-bold flex items-center gap-3"><i class="fas fa-sign-out-alt w-6"></i> Logout</button>
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:909fa3aac2f2429a7d8951" };
+        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
         firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
 
         // Admin Credentials
         const ADM_USER = "admin"; const ADM_PASS = "admin@nearby123";
-        let allShops = [], allOrders = [], currentShopId = null;
+        let deferredPrompt;
 
         // --- AUTH ---
         if(localStorage.getItem('nb_admin_auth')) showScreen('scr-home');
@@ -191,143 +157,94 @@
         }
         function logout() { localStorage.removeItem('nb_admin_auth'); location.reload(); }
 
-        // --- DASHBOARD LOGIC ---
-        function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id==='scr-dash') loadData(); }
+        // --- NAVIGATION ---
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
         
         function openDashboard(type) {
-            if(type === 'users') return Swal.fire("Coming Soon", "User Management Module under construction", "info");
-            showScreen('scr-dash');
+            if(type === 'shops') { showScreen('scr-shops'); loadShops(); }
+            if(type === 'users') { showScreen('scr-users'); loadUsers(); }
         }
 
-        function loadData() {
-            // Realtime Shops
+        // --- SHOPS LOGIC ---
+        function loadShops() {
             db.collection('shops').onSnapshot(snap => {
-                allShops = snap.docs.map(d => ({id:d.id, ...d.data()}));
-                updateStats();
-                renderShopList('active'); // Default view
-            });
-            // Realtime Orders
-            db.collection('orders').onSnapshot(snap => {
-                allOrders = snap.docs.map(d => d.data());
-                updateStats();
-            });
-        }
-
-        function updateStats() {
-            const active = allShops.filter(s => s.status === 'verified').length;
-            const pending = allShops.filter(s => s.status === 'pending').length;
-            const rev = allOrders.reduce((a,b) => a + (b.deliveryFee||0), 0); // Platform earns delivery fee (example logic)
-            
-            document.getElementById('cnt-active').innerText = active;
-            document.getElementById('cnt-pending').innerText = pending;
-            document.getElementById('cnt-orders').innerText = allOrders.length;
-            document.getElementById('cnt-rev').innerText = rev;
-            
-            if(pending > 0) document.getElementById('dot-pending').classList.remove('hidden');
-        }
-
-        // --- RENDER LISTS ---
-        function renderShopList(filter) {
-            const list = document.getElementById('dynamic-list');
-            const data = allShops.filter(s => filter==='active' ? s.status!=='pending' : s.status==='pending');
-            
-            document.getElementById('list-title').innerText = filter==='active' ? 'Active Shops' : 'Pending Approvals';
-            document.getElementById('list-count').innerText = `${data.length} found`;
-
-            if(data.length === 0) { list.innerHTML = `<div class="p-8 text-center text-gray-600"><i class="fas fa-box-open text-4xl mb-2"></i><br>No Data</div>`; return; }
-
-            list.innerHTML = data.map(s => `
-                <div class="list-item" onclick="openShopDetail('${s.id}')">
-                    <div class="flex items-center gap-3">
-                        <div class="avatar bg-gray-800 text-white font-bold">${s.shopName[0]}</div>
+                const list = document.getElementById('shop-list');
+                let active=0, pending=0;
+                list.innerHTML = "";
+                
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    if(s.status === 'verified') active++; else if(s.status === 'pending') pending++;
+                    
+                    list.innerHTML += `
+                    <div class="list-item">
                         <div>
-                            <h4 class="font-bold text-white text-sm">${s.shopName}</h4>
+                            <h4 class="font-bold text-white">${s.shopName}</h4>
                             <p class="text-xs text-gray-500">${s.ownerName} • ${s.phone}</p>
                         </div>
-                    </div>
-                    <span class="badge ${s.status==='verified'?'b-green':(s.status==='pending'?'b-yellow':'b-red')}">${s.status}</span>
-                </div>
-            `).join('');
+                        <div>
+                            ${s.status === 'pending' ? 
+                                `<button onclick="approveShop('${doc.id}')" class="bg-green-600 text-white text-xs px-3 py-1 rounded">Approve</button>` : 
+                                `<span class="text-green-500 text-xs font-bold uppercase">${s.status}</span>`}
+                        </div>
+                    </div>`;
+                });
+                
+                document.getElementById('cnt-active').innerText = active;
+                document.getElementById('cnt-pending').innerText = pending;
+            });
         }
 
-        function renderAllOrders() {
-            const list = document.getElementById('dynamic-list');
-            document.getElementById('list-title').innerText = 'Recent Orders';
-            document.getElementById('list-count').innerText = `${allOrders.length} total`;
-            
-            list.innerHTML = allOrders.slice(0, 50).map(o => `
-                <div class="list-item">
-                    <div>
-                        <h4 class="font-bold text-white text-sm">${o.customerName}</h4>
-                        <p class="text-xs text-gray-500">${o.items.length} Items • ₹${o.totalAmount}</p>
-                    </div>
-                    <span class="text-xs font-bold text-orange-500">${o.status}</span>
-                </div>
-            `).join('');
+        function approveShop(id) {
+            db.collection('shops').doc(id).update({status: 'verified', isOpen: true});
         }
 
-        function renderRevenue() {
-            const list = document.getElementById('sub-list');
-            const activeShops = allShops.filter(s => s.status === 'verified');
-            document.getElementById('rev-total').innerText = allOrders.reduce((a,b)=>a+(b.deliveryFee||0),0);
-            
-            list.innerHTML = activeShops.map(s => `
-                <div class="bg-[#1a1a1a] p-3 rounded-xl border border-[#333] flex justify-between items-center">
-                    <div><p class="font-bold text-white text-sm">${s.shopName}</p><p class="text-xs text-gray-500">Free Plan</p></div>
-                    <button class="bg-blue-900/30 text-blue-400 text-xs px-3 py-1 rounded border border-blue-800">Upgrade</button>
-                </div>
-            `).join('');
-            document.getElementById('pop-rev').classList.add('open');
+        // --- USERS LOGIC ---
+        function loadUsers() {
+            // Since we don't have a dedicated 'users' collection yet (users are in localStorage of customers),
+            // we will fetch unique users from the 'orders' collection for now.
+            db.collection('orders').orderBy('timestamp', 'desc').limit(50).onSnapshot(snap => {
+                const list = document.getElementById('user-list');
+                const users = new Set();
+                list.innerHTML = "";
+                
+                snap.forEach(doc => {
+                    const o = doc.data();
+                    if(!users.has(o.customerPhone)) {
+                        users.add(o.customerPhone);
+                        list.innerHTML += `
+                        <div class="list-item">
+                            <div>
+                                <h4 class="font-bold text-white">${o.customerName}</h4>
+                                <p class="text-xs text-gray-500">${o.customerPhone}</p>
+                            </div>
+                            <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">Last Order: ₹${o.totalAmount}</span>
+                        </div>`;
+                    }
+                });
+                
+                document.getElementById('cnt-users').innerText = users.size;
+                document.getElementById('cnt-active-users').innerText = Math.floor(users.size * 0.4); // Mock active count
+            });
         }
 
-        // --- SHOP DETAILS & ACTIONS ---
-        function openShopDetail(id) {
-            currentShopId = id;
-            const s = allShops.find(x => x.id === id);
-            if(!s) return;
+        // --- PWA INSTALL ---
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').classList.remove('hidden');
+        });
 
-            document.getElementById('dt-name').innerText = s.shopName;
-            document.getElementById('dt-icon').innerText = s.shopName[0];
-            document.getElementById('dt-owner').innerText = s.ownerName;
-            document.getElementById('dt-phone').innerText = s.phone;
-            document.getElementById('dt-upi').innerText = s.upiId;
-            document.getElementById('dt-status').innerText = s.status;
-            document.getElementById('dt-status').className = `badge mt-2 inline-block ${s.status==='verified'?'b-green':(s.status==='pending'?'b-yellow':'b-red')}`;
-
-            document.getElementById('btn-call').href = `tel:${s.phone}`;
-            document.getElementById('btn-wa').href = `https://wa.me/91${s.phone}`;
-            
-            // Show/Hide Buttons based on status
-            if(s.status === 'pending') {
-                document.getElementById('approval-actions').classList.remove('hidden');
-                document.getElementById('btn-ban').classList.add('hidden');
-            } else {
-                document.getElementById('approval-actions').classList.add('hidden');
-                document.getElementById('btn-ban').classList.remove('hidden');
-                document.getElementById('btn-ban').innerHTML = s.status==='suspended' ? '<i class="fas fa-check"></i> Unban' : '<i class="fas fa-ban"></i> Suspend';
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
+                    document.getElementById('install-btn').classList.add('hidden');
+                }
             }
-
-            document.getElementById('pop-shop').classList.add('open');
-        }
-
-        function closePopup() { document.querySelectorAll('.popup').forEach(p => p.classList.remove('open')); }
-
-        function approveShop() {
-            db.collection('shops').doc(currentShopId).update({status: 'verified', isOpen: true}).then(() => {
-                closePopup(); Swal.fire("Success", "Shop Approved!", "success");
-            });
-        }
-        function rejectShop() {
-            db.collection('shops').doc(currentShopId).delete().then(() => {
-                closePopup(); Swal.fire("Deleted", "Request Rejected", "info");
-            });
-        }
-        function toggleBan() {
-            const s = allShops.find(x => x.id === currentShopId);
-            const newStatus = s.status === 'suspended' ? 'verified' : 'suspended';
-            db.collection('shops').doc(currentShopId).update({status: newStatus, isOpen: newStatus==='verified'}).then(() => {
-                closePopup(); Swal.fire("Updated", `Shop ${newStatus}`, "success");
-            });
         }
     </script>
 </body>
