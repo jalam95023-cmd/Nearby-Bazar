@@ -3,436 +3,1864 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nearby Bazar</title>
+    <title>Nearby Bazar - Order Fresh & Fast</title>
     <meta name="theme-color" content="#0f0f0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="Order from nearby shops instantly">
     
+    <!-- External Resources -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- SGMC ORIGINAL THEME --- */
-        :root { --bg: #050505; --card: #141414; --border: #333; --accent: #F97316; --text: #fff; --glass: rgba(30, 30, 30, 0.6); }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        /* Modern Design System */
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0a0a0a;
+            --bg-card: #141414;
+            --border: #252525;
+            --accent: #ff6b35;
+            --accent-hover: #ff8456;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --glass: rgba(20, 20, 20, 0.7);
+        }
         
-        /* 1. HOME SCREEN STYLES */
-        .shop-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 16px; margin-bottom: 12px; position: relative; transition: 0.2s; }
-        .shop-card:active { transform: scale(0.98); }
-        .live-badge { position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .closed-badge { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-
-        /* 2. SGMC SHOP STYLES (Glassmorphism) */
-        .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
-        .item-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; background: #222; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        /* Modals & Overlays */
-        .fs-modal { position: fixed; inset: 0; background: var(--bg); z-index: 100; transform: translateX(100%); transition: 0.3s; overflow-y: auto; }
-        .fs-modal.open { transform: translateX(0); }
+        body {
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            padding-bottom: 100px;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
         
-        .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
-        .popup-overlay.open { display: flex; opacity: 1; pointer-events: auto; }
-        .popup-card { background: #151515; border: 1px solid #333; width: 90%; max-width: 350px; border-radius: 20px; padding: 20px; position: relative; }
-
-        /* Sidebar */
-        .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; background: #0f0f0f; z-index: 300; transform: translateX(-100%); transition: 0.3s; border-right: 1px solid #333; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-        .sidebar.open { transform: translateX(0); }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 290; display: none; }
-        .sidebar-overlay.open { display: block; }
+        /* Auth Screen */
+        #auth-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 32px;
+        }
         
-        /* Auth */
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
-        input { background: #222; border: 1px solid #444; color: white; padding: 14px; width: 100%; border-radius: 12px; margin-bottom: 12px; outline: none; }
-        .btn-primary { background: linear-gradient(to right, #ea580c, #c2410c); color: white; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; }
-
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .logo {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, #ffaa00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+        
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .auth-input {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            outline: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-input:focus {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+        
+        .auth-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #ff8456 100%);
+            color: white;
+            padding: 18px;
+            border-radius: 16px;
+            font-weight: 700;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 107, 53, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        /* Home Screen */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, #ffaa00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .location-badge {
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        
+        /* Shop Cards */
+        .shop-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .shop-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), #ffaa00);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .shop-card:active {
+            transform: scale(0.98);
+        }
+        
+        .shop-card:hover::before {
+            opacity: 1;
+        }
+        
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        
+        .shop-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+        
+        .shop-meta {
+            display: flex;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .shop-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-open {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .badge-closed {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Shop View - Full Screen */
+        .fs-modal {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        
+        .fs-modal.open {
+            transform: translateX(0);
+        }
+        
+        .shop-header-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            z-index: 60;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .shop-header-bar h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .shop-status-indicator {
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Menu Items */
+        .menu-container {
+            padding: 20px;
+        }
+        
+        .category-section {
+            margin-bottom: 32px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .category-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+        
+        .menu-item {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+        
+        .item-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+            flex-shrink: 0;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .item-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .item-stock {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .qty-display {
+            min-width: 32px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
         /* Cart Bar */
-        #cart-bar { position: fixed; bottom: 30px; left: 15px; right: 15px; background: linear-gradient(to right, #ea580c, #ca8a04); color: white; padding: 12px 20px; border-radius: 12px; display: none; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 40; cursor: pointer; animation: slideUp 0.3s; }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        #cart-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--accent) 0%, #ff8456 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 20px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.5);
+            z-index: 70;
+            cursor: pointer;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        #cart-bar:active {
+            transform: scale(0.98);
+        }
+        
+        .cart-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .cart-count-badge {
+            background: white;
+            color: var(--accent);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+        }
+        
+        .cart-total {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cart-total-label {
+            font-size: 10px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .cart-total-amount {
+            font-size: 20px;
+            font-weight: 800;
+        }
+        
+        .cart-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+        
+        /* Checkout Modal */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .popup-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .popup-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            border-radius: 24px;
+            padding: 24px;
+            position: relative;
+            overflow-y: auto;
+            animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .popup-title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 300px;
+            background: var(--bg-primary);
+            z-index: 300;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid var(--border);
+            box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            padding: 32px 24px;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 290;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+        
+        .sidebar-user {
+            margin-bottom: 40px;
+        }
+        
+        .sidebar-user h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, #ffaa00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-user p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .sidebar-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .sidebar-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+        }
+        
+        .sidebar-btn i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            margin-top: auto;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        /* Loading & Empty States */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 16px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 14px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast-success { border-color: var(--success); color: var(--success); }
+        .toast-error { border-color: var(--error); color: var(--error); }
+        .toast-info { border-color: var(--accent); color: var(--accent); }
+        
+        /* Order Success Animation */
+        .success-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            animation: successPop 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes successPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .success-text {
+            text-align: center;
+        }
+        
+        .success-text h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .success-text p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 640px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .popup-card {
+                max-width: 100%;
+                border-radius: 20px;
+            }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            width: 100%;
+            border-radius: 12px;
+            outline: none;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-btn {
+            padding: 16px 12px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .payment-btn.selected {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+        
+        .order-items {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .order-summary {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .summary-row.total {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--accent);
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Auth Screen -->
     <div id="auth-screen">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-orange-500 mb-2">Nearby Bazar</h1>
-            <p class="text-gray-500 text-sm">Customer Login</p>
+        <div class="auth-container">
+            <div class="logo-container">
+                <div class="logo">Nearby Bazar</div>
+                <div class="tagline">Fresh, Fast & Convenient</div>
+            </div>
+            
+            <input type="text" id="user-name" class="auth-input" placeholder="Your Full Name" maxlength="50">
+            <input type="tel" id="user-phone" class="auth-input" placeholder="Phone Number" maxlength="10" pattern="[6-9][0-9]{9}">
+            
+            <button onclick="login()" class="btn-primary">
+                <i class="fas fa-arrow-right"></i> Continue
+            </button>
         </div>
-        <input type="text" id="user-name" placeholder="Your Name">
-        <input type="tel" id="user-phone" placeholder="Phone Number">
-        <button onclick="login()" class="btn-primary">Continue</button>
     </div>
 
+    <!-- Main Home View -->
     <div id="view-home" class="hidden">
-        <div class="sticky top-0 bg-[#050505]/95 backdrop-blur-md p-4 border-b border-[#333] flex justify-between items-center z-40">
-            <button onclick="toggleMainSidebar()" class="w-10 h-10 rounded-full bg-gray-900 text-white"><i class="fas fa-bars"></i></button>
-            <div>
-                <h1 class="text-lg font-bold text-orange-500 text-center">Nearby Bazar</h1>
-                <p class="text-[10px] text-gray-400 text-center" id="loc-status">Detecting...</p>
+        <!-- Header -->
+        <div class="header">
+            <button onclick="toggleMainSidebar()" class="header-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-title">
+                <h1>Nearby Bazar</h1>
+                <div class="location-badge" id="loc-status">
+                    <i class="fas fa-location-dot"></i>
+                    <span>Detecting location...</span>
+                </div>
             </div>
-            <div class="w-10"></div>
+            <div style="width: 44px;"></div>
         </div>
-        <div id="shops-list" class="p-4 space-y-3">
-            <div class="text-center text-gray-600 mt-20"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
+        
+        <!-- Shops List -->
+        <div id="shops-list" class="p-5">
+            <div class="loading">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <p>Finding nearby shops...</p>
+            </div>
         </div>
     </div>
 
-    <div id="view-shop" class="fs-modal bg-[#050505] p-0">
-        <div class="fixed top-0 left-0 right-0 bg-[#050505]/95 backdrop-blur-sm z-40 px-4 py-4 flex justify-between items-center border-b border-white/5">
-            <button onclick="closeShop()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 bg-[#111]"><i class="fas fa-arrow-left"></i></button>
-            <div>
-                <h1 class="text-xl font-bold text-white" id="shop-title">Shop</h1>
-                <p class="text-[10px] text-green-500 font-bold tracking-wide pl-0.5 text-center">● LIVE STORE</p>
+    <!-- Shop View (Full Screen Modal) -->
+    <div id="view-shop" class="fs-modal">
+        <!-- Header -->
+        <div class="shop-header-bar">
+            <button onclick="closeShop()" class="header-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="flex-1 text-center">
+                <h1 id="shop-title">Shop</h1>
+                <div class="shop-status-indicator">
+                    <i class="fas fa-circle"></i>
+                    <span>LIVE STORE</span>
+                </div>
             </div>
-            <button onclick="toggleShopSidebar()" class="w-10 h-10 rounded-full flex items-center justify-center text-orange-500 border border-gray-800 bg-[#111]"><i class="fas fa-bars"></i></button>
+            <button onclick="toggleShopSidebar()" class="header-btn">
+                <i class="fas fa-ellipsis-vertical"></i>
+            </button>
         </div>
-
-        <div class="h-20"></div>
-
-        <div id="menu-container" class="p-4 space-y-4 pb-32"></div>
-
+        
+        <!-- Menu Container -->
+        <div id="menu-container" class="menu-container"></div>
+        
+        <!-- Cart Bar -->
         <div id="cart-bar" onclick="openCheckout()">
-            <div class="flex items-center gap-3">
-                <div class="bg-white text-orange-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" id="cart-count">0</div>
-                <div><p class="text-[10px] uppercase font-bold text-orange-100 opacity-80">Total</p><span class="font-bold text-lg">₹<span id="cart-total">0</span></span></div>
+            <div class="cart-info">
+                <div class="cart-count-badge" id="cart-count">0</div>
+                <div class="cart-total">
+                    <span class="cart-total-label">Total Amount</span>
+                    <span class="cart-total-amount">₹<span id="cart-total">0</span></span>
+                </div>
             </div>
-            <span class="font-bold text-sm flex items-center gap-2">Checkout <i class="fas fa-arrow-right"></i></span>
+            <div class="cart-action">
+                <span>Checkout</span>
+                <i class="fas fa-arrow-right"></i>
+            </div>
         </div>
     </div>
 
+    <!-- Sidebar Overlay -->
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebars()"></div>
-    
-    <div id="sidebar-main" class="sidebar p-6 flex flex-col h-full">
-        <div class="mb-8">
-            <h2 class="text-xl font-bold text-orange-500 mb-1" id="sb-user">User</h2>
-            <p class="text-xs text-gray-500" id="sb-phone">+91...</p>
+
+    <!-- Main Sidebar -->
+    <div id="sidebar-main" class="sidebar">
+        <div class="sidebar-user">
+            <h2 id="sb-user">User</h2>
+            <p id="sb-phone">+91...</p>
         </div>
-        <div class="space-y-4">
-            <button onclick="showAllOrders()" class="text-gray-300 font-bold flex gap-3 items-center"><i class="fas fa-receipt w-6"></i> All Orders</button>
-            <button onclick="shareApp()" class="text-gray-300 font-bold flex gap-3 items-center"><i class="fas fa-share-alt w-6"></i> Share App</button>
+        
+        <div class="sidebar-menu">
+            <button onclick="showAllOrders()" class="sidebar-btn">
+                <i class="fas fa-receipt"></i>
+                <span>My Orders</span>
+            </button>
+            <button onclick="shareApp()" class="sidebar-btn">
+                <i class="fas fa-share-nodes"></i>
+                <span>Share App</span>
+            </button>
         </div>
-        <button onclick="logout()" class="text-red-500 font-bold mt-auto flex gap-3 items-center"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        
+        <button onclick="logout()" class="sidebar-logout">
+            <i class="fas fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </button>
     </div>
 
-    <div id="sidebar-shop" class="sidebar p-6 flex flex-col h-full">
-        <div class="mb-8">
-            <h2 class="text-xl font-bold text-orange-500 mb-1" id="sb-shop-name">Shop</h2>
-            <p class="text-xs text-green-500">● Verified Partner</p>
+    <!-- Shop Sidebar -->
+    <div id="sidebar-shop" class="sidebar">
+        <div class="sidebar-user">
+            <h2 id="sb-shop-name">Shop</h2>
+            <p style="color: var(--success);">● Verified Partner</p>
         </div>
-        <div class="space-y-4">
-            <button onclick="showShopOrders()" class="text-gray-300 font-bold flex gap-3 items-center"><i class="fas fa-history w-6"></i> Order History</button>
-            <button onclick="alert('Chat coming soon')" class="text-gray-300 font-bold flex gap-3 items-center"><i class="fas fa-comments w-6"></i> Chat Support</button>
+        
+        <div class="sidebar-menu">
+            <button onclick="showShopOrders()" class="sidebar-btn">
+                <i class="fas fa-clock-rotate-left"></i>
+                <span>Order History</span>
+            </button>
+            <button onclick="showToast('Chat feature coming soon!', 'info')" class="sidebar-btn">
+                <i class="fas fa-message"></i>
+                <span>Chat Support</span>
+            </button>
         </div>
     </div>
 
-    <div id="checkout-modal" class="popup-overlay" style="align-items: flex-end;">
-        <div class="bg-[#151515] w-full max-w-md p-6 rounded-t-3xl border-t border-[#333] shadow-2xl max-h-[90vh] overflow-y-auto relative">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white">Checkout</h2>
-                <button onclick="document.getElementById('checkout-modal').classList.remove('open')" class="w-8 h-8 rounded-full bg-[#222] text-gray-400 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="popup-overlay" onclick="event.target === this && closeCheckout()">
+        <div class="popup-card">
+            <div class="popup-header">
+                <h2 class="popup-title">Checkout</h2>
+                <button onclick="closeCheckout()" class="close-btn">
+                    <i class="fas fa-xmark"></i>
+                </button>
             </div>
             
-            <div id="checkout-items" class="space-y-3 mb-6"></div>
+            <!-- Order Type Tabs -->
+            <div class="tab-buttons">
+                <div id="tab-self" class="tab-btn active" onclick="toggleOrderType('self')">
+                    For Myself
+                </div>
+                <div id="tab-others" class="tab-btn" onclick="toggleOrderType('others')">
+                    For Others
+                </div>
+            </div>
             
-            <div class="glass-card p-4 border border-gray-700/50 mb-4">
-                <div class="flex bg-[#222] p-1 rounded-xl mb-4">
-                    <button onclick="toggleOrderType('self')" id="tab-self" class="flex-1 py-2 rounded-lg text-xs font-bold text-white bg-orange-600">Self Order</button>
-                    <button onclick="toggleOrderType('others')" id="tab-others" class="flex-1 py-2 rounded-lg text-xs font-bold text-gray-400">Others</button>
+            <!-- Order Items -->
+            <div class="order-items" id="checkout-items"></div>
+            
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="co-subtotal">₹0</span>
                 </div>
-                <div id="form-self">
-                    <div class="flex items-center justify-between mb-2"><p class="text-[10px] font-bold text-orange-500">LOCATION</p><button onclick="detectLocation()" class="text-xs text-blue-400 font-bold"><i class="fas fa-crosshairs"></i> Detect</button></div>
-                    <div class="flex gap-2"><input id="addr-flat" placeholder="Flat / Room No" class="text-xs"><input id="addr-land" placeholder="Landmark" class="text-xs"></div>
+                <div class="summary-row">
+                    <span>Delivery</span>
+                    <span id="co-delivery">₹0</span>
                 </div>
-                <div id="form-others" class="hidden">
-                    <input id="rec-name" placeholder="Receiver Name" class="text-xs mb-2">
-                    <input id="rec-phone" type="tel" placeholder="Receiver Phone" class="text-xs mb-2">
-                    <input id="rec-addr" placeholder="Full Address" class="text-xs">
-                </div>
-            </div>
-
-            <div><label class="text-[10px] font-bold text-gray-500 mb-2 block">PAYMENT</label>
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    <button onclick="setPayment('Cash')" id="pay-cash" class="p-3 rounded-xl border border-gray-700 bg-gray-800 text-xs font-bold text-gray-300">Cash</button>
-                    <button onclick="setPayment('UPI')" id="pay-upi" class="p-3 rounded-xl border border-gray-700 bg-gray-800 text-xs font-bold text-gray-300">UPI</button>
-                    <button onclick="setPayment('Udhaar')" id="pay-udhaar" class="p-3 rounded-xl border border-gray-700 bg-gray-800 text-xs font-bold text-gray-300">Udhaar</button>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>₹<span id="co-total">0</span></span>
                 </div>
             </div>
-
-            <div class="flex justify-between items-center pt-4 border-t border-[#333]">
-                <div><p class="text-xs text-gray-500">Total</p><span class="text-white font-bold text-xl">₹<span id="co-total">0</span></span></div>
-                <button onclick="placeOrder()" class="bg-gradient-to-r from-orange-600 to-orange-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg">Place Order</button>
+            
+            <!-- Address Form -->
+            <div id="form-self">
+                <div class="form-group">
+                    <label class="form-label">Flat / House No.</label>
+                    <input type="text" id="addr-flat" class="form-input" placeholder="e.g. A-101">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Landmark / Street</label>
+                    <input type="text" id="addr-land" class="form-input" placeholder="e.g. Near XYZ Mall">
+                </div>
             </div>
+            
+            <div id="form-others" class="hidden">
+                <div class="form-group">
+                    <label class="form-label">Receiver Name</label>
+                    <input type="text" id="rec-name" class="form-input" placeholder="Full Name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" id="rec-phone" class="form-input" placeholder="10 digit number" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Complete Address</label>
+                    <input type="text" id="rec-addr" class="form-input" placeholder="Full delivery address">
+                </div>
+            </div>
+            
+            <!-- Payment Options -->
+            <div class="form-label" style="margin-top: 20px;">Payment Method</div>
+            <div class="payment-options">
+                <div id="pay-cash" class="payment-btn selected" onclick="setPayment('Cash')">
+                    <i class="fas fa-money-bill"></i><br>Cash
+                </div>
+                <div id="pay-upi" class="payment-btn" onclick="setPayment('UPI')">
+                    <i class="fas fa-mobile-screen"></i><br>UPI
+                </div>
+                <div id="pay-udhaar" class="payment-btn" onclick="setPayment('Udhaar')">
+                    <i class="fas fa-handshake"></i><br>Credit
+                </div>
+            </div>
+            
+            <button onclick="placeOrder()" class="btn-primary">
+                <i class="fas fa-check"></i> Place Order
+            </button>
         </div>
     </div>
 
-    <div id="history-modal" class="popup-overlay">
-        <div class="bg-[#151515] w-full max-w-md h-[80vh] p-4 rounded-xl relative flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
-                <h3 class="font-bold text-white text-lg" id="hist-title">Orders</h3>
-                <button onclick="document.getElementById('history-modal').classList.remove('open')" class="text-gray-400 text-xl"><i class="fas fa-times"></i></button>
+    <!-- Order History Modal -->
+    <div id="history-modal" class="popup-overlay" onclick="event.target === this && closeHistory()">
+        <div class="popup-card">
+            <div class="popup-header">
+                <h2 class="popup-title">Order History</h2>
+                <button onclick="closeHistory()" class="close-btn">
+                    <i class="fas fa-xmark"></i>
+                </button>
             </div>
-            <div id="history-content" class="flex-1 overflow-y-auto space-y-3"></div>
+            <div id="history-content"></div>
         </div>
     </div>
 
-    <div id="order-detail-popup" class="popup-overlay">
-        <div class="bg-[#1f1f1f] w-full max-w-sm p-6 rounded-2xl border border-gray-700 relative">
-            <button onclick="document.getElementById('order-detail-popup').classList.remove('open')" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times"></i></button>
-            <h2 class="text-lg font-bold mb-1 text-white">Details</h2>
-            <p id="od-status" class="text-xs uppercase font-bold text-orange-500 mb-4">Pending</p>
-            <div id="od-items" class="bg-gray-900/50 rounded p-2 max-h-40 overflow-y-auto mb-2 space-y-1"></div>
-            <div class="pt-2 border-t border-gray-700 font-bold flex justify-between text-white"><span>Total</span><span id="od-total" class="text-orange-500"></span></div>
+    <!-- Order Detail Popup -->
+    <div id="order-detail-popup" class="popup-overlay" onclick="event.target === this && closeOrderDetail()">
+        <div class="popup-card">
+            <div class="popup-header">
+                <h2 class="popup-title">Order Details</h2>
+                <button onclick="closeOrderDetail()" class="close-btn">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="order-summary">
+                <div class="summary-row">
+                    <span>Status</span>
+                    <span id="od-status" style="text-transform: uppercase; font-weight: 700;"></span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span id="od-total"></span>
+                </div>
+            </div>
+            
+            <div class="form-label">Items Ordered</div>
+            <div class="order-items" id="od-items"></div>
         </div>
     </div>
 
-    <div id="cooking-screen" class="fixed inset-0 bg-black z-[200] hidden flex-col items-center justify-center">
-        <i class="fas fa-mug-hot text-6xl text-orange-500 mb-6 block animate-pulse"></i>
-        <h2 class="text-2xl font-bold mb-2 text-white">Order Sent!</h2>
-        <p class="text-gray-400 text-sm">Shop will confirm shortly...</p>
+    <!-- Success Screen -->
+    <div id="success-screen" class="success-screen">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="success-text">
+            <h2>Order Placed!</h2>
+            <p>Your order is being prepared</p>
+        </div>
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
+            authDomain: "nearby-bazar.firebaseapp.com",
+            projectId: "nearby-bazar",
+            storageBucket: "nearby-bazar.firebasestorage.app",
+            messagingSenderId: "183262510084",
+            appId: "1:183262510084:web:909fa3aac2f2429a7d8951"
+        };
 
-        let USER = JSON.parse(localStorage.getItem('nb_user'));
-        let currentLocation = null;
-        let activeShop = null; // Currently opened shop object
-        let cart = [];
-        let payMode = 'Cash';
-        let isSelf = true;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        // --- AUTH ---
-        if(USER) {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('view-home').classList.remove('hidden');
-            document.getElementById('sb-user').innerText = USER.name;
-            document.getElementById('sb-phone').innerText = USER.phone;
-            initHome();
-        } else {
-            document.getElementById('auth-screen').style.display = 'flex';
+        // Security & Helpers
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
         }
 
+        function escapeHtml(text) {
+            const map = {'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#039;'};
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function validatePhone(phone) {
+            return /^[6-9]\d{9}$/.test(phone);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Global State
+        let USER = null;
+        let cart = [];
+        let activeShop = null;
+        let currentLocation = null;
+        let isSelf = true;
+        let payMode = 'Cash';
+
+        // Authentication
         function login() {
             const name = document.getElementById('user-name').value.trim();
             const phone = document.getElementById('user-phone').value.trim();
-            if(name && phone.length===10) {
-                USER = { name, phone };
-                localStorage.setItem('nb_user', JSON.stringify(USER));
+            
+            if (!name || name.length < 2) {
+                showToast('Please enter your full name', 'error');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('Please enter a valid 10-digit phone number', 'error');
+                return;
+            }
+            
+            USER = { 
+                name: sanitizeInput(name), 
+                phone: phone,
+                joinedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('user', JSON.stringify(USER));
+            
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('sb-user').innerText = USER.name;
+            document.getElementById('sb-phone').innerText = '+91 ' + USER.phone;
+            
+            detectLocation();
+            loadShops();
+            
+            showToast('Welcome, ' + USER.name + '!', 'success');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('user');
                 location.reload();
-            } else alert("Invalid Input");
-        }
-        function logout() { localStorage.removeItem('nb_user'); location.reload(); }
-
-        // --- HOME ---
-        function initHome() {
-            navigator.geolocation.getCurrentPosition(p => {
-                currentLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
-                document.getElementById('loc-status').innerText = "GPS Active";
-                loadShops();
-            }, () => {
-                document.getElementById('loc-status').innerText = "GPS Failed - Showing All";
-                loadShops();
-            });
+            }
         }
 
+        // Auto-login if user exists
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                USER = JSON.parse(savedUser);
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('view-home').classList.remove('hidden');
+                document.getElementById('sb-user').innerText = USER.name;
+                document.getElementById('sb-phone').innerText = '+91 ' + USER.phone;
+                detectLocation();
+                loadShops();
+            }
+        });
+
+        // Location Detection
+        function detectLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        document.getElementById('loc-status').innerHTML = `
+                            <i class="fas fa-location-dot"></i>
+                            <span>Location detected</span>
+                        `;
+                        loadShops(); // Reload with location
+                    },
+                    (error) => {
+                        console.error('Location error:', error);
+                        document.getElementById('loc-status').innerHTML = `
+                            <i class="fas fa-location-crosshairs"></i>
+                            <span>Enable location</span>
+                        `;
+                    }
+                );
+            }
+        }
+
+        // Load Shops
         function loadShops() {
-            db.collection('shops').where('status', '==', 'verified').onSnapshot(snap => {
-                const list = document.getElementById('shops-list');
-                list.innerHTML = "";
-                snap.forEach(doc => {
-                    const s = doc.data();
-                    let dist = "Unknown";
-                    if(currentLocation && s.location) {
-                        dist = getDistance(currentLocation.lat, currentLocation.lng, s.location.lat, s.location.lng).toFixed(1) + " km";
+            const container = document.getElementById('shops-list');
+            
+            db.collection('shops')
+                .where('status', '==', 'verified')
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-store-slash"></i>
+                                <h3>No Shops Available</h3>
+                                <p>Check back later for nearby stores</p>
+                            </div>
+                        `;
+                        return;
                     }
                     
-                    list.innerHTML += `
-                    <div class="shop-card flex justify-between items-center" onclick="openShop('${doc.id}', '${s.shopName}', ${s.isOpen})">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-xl">🏪</div>
-                            <div>
-                                <h2 class="font-bold text-white text-lg">${s.shopName}</h2>
-                                <p class="text-xs text-gray-400">${dist} • ${s.ownerName}</p>
+                    let shops = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    
+                    // Sort by distance if location available
+                    if (currentLocation) {
+                        shops = shops.filter(s => s.location).map(s => ({
+                            ...s,
+                            distance: getDistance(
+                                currentLocation.lat,
+                                currentLocation.lng,
+                                s.location.lat,
+                                s.location.lng
+                            )
+                        })).sort((a, b) => a.distance - b.distance);
+                    }
+                    
+                    container.innerHTML = shops.map(shop => {
+                        const isOpen = shop.isOpen === true;
+                        const distanceStr = shop.distance ? 
+                            `<span><i class="fas fa-location-dot"></i>${shop.distance.toFixed(1)} km</span>` : 
+                            '';
+                        
+                        return `
+                            <div class="shop-card" onclick="openShop('${shop.id}')">
+                                <div class="shop-header">
+                                    <div class="shop-info">
+                                        <h3>${escapeHtml(shop.shopName)}</h3>
+                                        <div class="shop-meta">
+                                            ${distanceStr}
+                                            <span><i class="fas fa-star"></i>4.5</span>
+                                        </div>
+                                    </div>
+                                    <span class="status-badge ${isOpen ? 'badge-open' : 'badge-closed'}">
+                                        ${isOpen ? 'Open' : 'Closed'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <span class="${s.isOpen ? 'live-badge' : 'closed-badge'}">${s.isOpen ? 'LIVE' : 'CLOSED'}</span>
-                    </div>`;
+                        `;
+                    }).join('');
                 });
+        }
+
+        // Open Shop
+        function openShop(shopId) {
+            db.collection('shops').doc(shopId).get().then(doc => {
+                if (!doc.exists) {
+                    showToast('Shop not found', 'error');
+                    return;
+                }
+                
+                activeShop = { id: doc.id, ...doc.data() };
+                
+                if (!activeShop.isOpen) {
+                    showToast('This shop is currently closed', 'error');
+                    return;
+                }
+                
+                document.getElementById('shop-title').innerText = activeShop.shopName;
+                document.getElementById('sb-shop-name').innerText = activeShop.shopName;
+                document.getElementById('view-shop').classList.add('open');
+                
+                // Reset cart for new shop
+                cart = [];
+                updateCartUI();
+                
+                loadMenu(shopId);
             });
         }
 
-        // --- SHOP VIEW ---
-        async function openShop(id, name, isOpen) {
-            if(!isOpen) return alert("Shop is Closed!");
-            const docSnap = await db.collection('shops').doc(id).get();
-            activeShop = { id, ...docSnap.data() };
+        function closeShop() {
+            document.getElementById('view-shop').classList.remove('open');
+            activeShop = null;
+        }
+
+        // Load Menu
+        function loadMenu(shopId) {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '<div class="loading"><i class="fas fa-circle-notch fa-spin"></i><p>Loading menu...</p></div>';
             
-            document.getElementById('shop-title').innerText = name;
-            document.getElementById('sb-shop-name').innerText = name;
-            document.getElementById('view-shop').classList.add('open');
-            
-            db.collection('shops').doc(id).collection('inventory').where('available', '==', true).onSnapshot(snap => {
-                const list = document.getElementById('menu-container');
-                list.innerHTML = snap.docs.map(doc => {
-                    const i = doc.data();
-                    return `
-                    <div class="glass-card p-4 flex justify-between items-center mb-3">
-                        <div class="flex gap-3 items-center">
-                            ${i.image ? `<img src="${i.image}" class="item-thumb">` : '<div class="item-thumb bg-gray-800"></div>'}
-                            <div>
-                                <h3 class="font-bold text-sm text-white">${i.name}</h3>
-                                <p class="text-orange-400 text-xs font-bold">₹${i.price}</p>
+            db.collection('shops').doc(shopId).collection('menu')
+                .where('available', '==', true)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-utensils"></i>
+                                <h3>Menu Not Available</h3>
+                                <p>This shop hasn't added items yet</p>
                             </div>
+                        `;
+                        return;
+                    }
+                    
+                    const items = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    
+                    // Group by category
+                    const categories = {};
+                    items.forEach(item => {
+                        const cat = item.category || 'Others';
+                        if (!categories[cat]) categories[cat] = [];
+                        categories[cat].push(item);
+                    });
+                    
+                    container.innerHTML = Object.entries(categories).map(([cat, items]) => `
+                        <div class="category-section">
+                            <h2 class="category-title">${escapeHtml(cat)}</h2>
+                            ${items.map(item => {
+                                const inCart = cart.find(c => c.id === item.id);
+                                const qty = inCart ? inCart.qty : 0;
+                                
+                                return `
+                                    <div class="menu-item">
+                                        <img src="${item.image || 'https://via.placeholder.com/70'}" 
+                                             alt="${escapeHtml(item.name)}" 
+                                             class="item-image"
+                                             onerror="this.src='https://via.placeholder.com/70'">
+                                        <div class="item-details">
+                                            <div class="item-name">${escapeHtml(item.name)}</div>
+                                            <div class="item-price">₹${item.price}</div>
+                                            ${item.stock ? `<div class="item-stock">Stock: ${item.stock}</div>` : ''}
+                                        </div>
+                                        <div class="qty-controls">
+                                            ${qty > 0 ? `
+                                                <button class="qty-btn" onclick="updateCart('${item.id}', -1)">−</button>
+                                                <span class="qty-display">${qty}</span>
+                                                <button class="qty-btn" onclick="updateCart('${item.id}', 1)">+</button>
+                                            ` : `
+                                                <button class="qty-btn" onclick="updateCart('${item.id}', 1)">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            `}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
-                        <button onclick="addToCart('${doc.id}', '${i.name}', ${i.price})" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold border border-gray-700">ADD</button>
-                    </div>`;
-                }).join('');
-            });
-            cart = []; updateCartUI();
+                    `).join('');
+                });
         }
 
-        function closeShop() { document.getElementById('view-shop').classList.remove('open'); cart=[]; updateCartUI(); }
-
-        // --- CART & CHECKOUT ---
-        function addToCart(id, name, price) {
-            const ex = cart.find(x => x.id === id);
-            if(ex) ex.qty++; else cart.push({id, name, price, qty: 1});
+        // Cart Management
+        function updateCart(itemId, change) {
+            const menuItem = document.querySelector(`[onclick*="${itemId}"]`);
+            const itemName = menuItem?.querySelector('.item-name')?.innerText || 'Item';
+            const itemPrice = parseInt(menuItem?.querySelector('.item-price')?.innerText.replace('₹', '') || 0);
+            
+            const existing = cart.find(c => c.id === itemId);
+            
+            if (existing) {
+                existing.qty += change;
+                if (existing.qty <= 0) {
+                    cart = cart.filter(c => c.id !== itemId);
+                    showToast(`${itemName} removed from cart`, 'info');
+                }
+            } else if (change > 0) {
+                cart.push({
+                    id: itemId,
+                    name: itemName,
+                    price: itemPrice,
+                    qty: 1
+                });
+                showToast(`${itemName} added to cart`, 'success');
+            }
+            
             updateCartUI();
-        }
-        function updateCartUI() {
-            const bar = document.getElementById('cart-bar');
-            const total = cart.reduce((a,b) => a+(b.price*b.qty), 0);
-            const count = cart.reduce((a,b) => a+b.qty, 0);
-            document.getElementById('cart-total').innerText = total;
-            document.getElementById('cart-count').innerText = count;
-            bar.style.display = count > 0 ? 'flex' : 'none';
+            loadMenu(activeShop.id); // Refresh to update buttons
         }
 
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-total').innerText = total;
+            document.getElementById('cart-bar').style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        // Checkout
         function openCheckout() {
-            if(!cart.length) return;
-            // Render items in modal
-            document.getElementById('checkout-items').innerHTML = cart.map(i => `<div class="flex justify-between text-sm text-gray-300"><span>${i.name} x${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('');
-            document.getElementById('co-total').innerText = cart.reduce((a,b) => a+(b.price*b.qty), 0);
+            if (!cart.length) return;
+            
+            const itemsHtml = cart.map(item => `
+                <div class="order-item">
+                    <span>${escapeHtml(item.name)} × ${item.qty}</span>
+                    <span>₹${item.price * item.qty}</span>
+                </div>
+            `).join('');
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const delivery = activeShop.settings?.deliveryCharge || 0;
+            const total = subtotal + delivery;
+            
+            document.getElementById('checkout-items').innerHTML = itemsHtml;
+            document.getElementById('co-subtotal').innerText = '₹' + subtotal;
+            document.getElementById('co-delivery').innerText = '₹' + delivery;
+            document.getElementById('co-total').innerText = total;
             document.getElementById('checkout-modal').classList.add('open');
         }
-        function closeCheckout() { document.getElementById('checkout-modal').classList.remove('open'); }
 
-        function toggleOrderType(t) {
-            isSelf = t==='self';
-            document.getElementById('tab-self').className = isSelf ? "flex-1 py-2 rounded-lg text-xs font-bold text-white bg-orange-600" : "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400";
-            document.getElementById('tab-others').className = !isSelf ? "flex-1 py-2 rounded-lg text-xs font-bold text-white bg-orange-600" : "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400";
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.remove('open');
+        }
+
+        function toggleOrderType(type) {
+            isSelf = type === 'self';
+            document.getElementById('tab-self').classList.toggle('active', isSelf);
+            document.getElementById('tab-others').classList.toggle('active', !isSelf);
             document.getElementById('form-self').classList.toggle('hidden', !isSelf);
             document.getElementById('form-others').classList.toggle('hidden', isSelf);
         }
-        function setPayment(m) {
-            payMode = m;
-            ['Cash','UPI','Udhaar'].forEach(x => {
-                const el = document.getElementById('pay-'+x.toLowerCase());
-                el.className = "p-3 rounded-xl border border-gray-700 bg-gray-800 text-xs font-bold text-gray-300";
-            });
-            document.getElementById('pay-'+m.toLowerCase()).className = "p-3 rounded-xl border border-green-500 bg-green-600 text-xs font-bold text-white";
-        }
-        
-        function detectLocation() {
-            navigator.geolocation.getCurrentPosition(p => {
-                currentLocation = {lat: p.coords.latitude, lng: p.coords.longitude};
-                document.getElementById('addr-flat').placeholder = "Loc Detected! Enter Flat No";
+
+        function setPayment(method) {
+            payMode = method;
+            ['cash', 'upi', 'udhaar'].forEach(m => {
+                const el = document.getElementById('pay-' + m);
+                el.classList.toggle('selected', m === method.toLowerCase());
             });
         }
 
         async function placeOrder() {
-            const addr = isSelf ? `${document.getElementById('addr-flat').value}, ${document.getElementById('addr-land').value}` : document.getElementById('rec-addr').value;
-            if(!addr) return alert("Enter Address");
+            // Validate address
+            let address = '';
+            if (isSelf) {
+                const flat = document.getElementById('addr-flat').value.trim();
+                const land = document.getElementById('addr-land').value.trim();
+                if (!flat || !land) {
+                    showToast('Please enter complete address', 'error');
+                    return;
+                }
+                address = `${sanitizeInput(flat)}, ${sanitizeInput(land)}`;
+            } else {
+                const name = document.getElementById('rec-name').value.trim();
+                const phone = document.getElementById('rec-phone').value.trim();
+                const addr = document.getElementById('rec-addr').value.trim();
+                
+                if (!name || !phone || !addr) {
+                    showToast('Please fill all receiver details', 'error');
+                    return;
+                }
+                
+                if (!validatePhone(phone)) {
+                    showToast('Invalid receiver phone number', 'error');
+                    return;
+                }
+                
+                address = `${sanitizeInput(name)}, ${phone}, ${sanitizeInput(addr)}`;
+            }
             
-            const total = cart.reduce((a,b) => a+(b.price*b.qty), 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const delivery = activeShop.settings?.deliveryCharge || 0;
+            const total = subtotal + delivery;
+            
             const orderData = {
                 shopId: activeShop.id,
+                shopName: activeShop.shopName,
                 items: cart,
+                subtotal: subtotal,
+                deliveryCharge: delivery,
                 totalAmount: total,
                 paymentMode: payMode,
                 status: 'pending',
                 customerName: USER.name,
                 customerPhone: USER.phone,
-                customerAddress: addr,
+                customerAddress: address,
                 customerCoordinates: currentLocation,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-
-            if(payMode === 'UPI') {
-                window.location.href = `upi://pay?pa=${activeShop.upiId}&pn=${activeShop.shopName}&am=${total}&cu=INR`;
+            
+            try {
+                // Add order to database
+                await db.collection('orders').add(orderData);
+                
+                // Handle UPI payment
+                if (payMode === 'UPI' && activeShop.upiId) {
+                    const upiUrl = `upi://pay?pa=${activeShop.upiId}&pn=${encodeURIComponent(activeShop.shopName)}&am=${total}&cu=INR&tn=Order%20Payment`;
+                    window.location.href = upiUrl;
+                }
+                
+                // Close checkout
+                closeCheckout();
+                
+                // Show success
+                const successScreen = document.getElementById('success-screen');
+                successScreen.style.display = 'flex';
+                
+                // Reset cart
+                cart = [];
+                updateCartUI();
+                
+                // Close after 3 seconds
+                setTimeout(() => {
+                    successScreen.style.display = 'none';
+                    closeShop();
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Order error:', error);
+                showToast('Failed to place order. Please try again.', 'error');
             }
-
-            await db.collection('orders').add(orderData);
-            closeCheckout();
-            document.getElementById('cooking-screen').style.display = 'flex';
-            setTimeout(() => {
-                document.getElementById('cooking-screen').style.display = 'none';
-                closeShop();
-            }, 2500);
         }
 
-        // --- HISTORY & SIDEBARS ---
-        function toggleMainSidebar() { 
-            document.getElementById('sidebar-main').classList.toggle('open'); 
+        // Order History
+        function showAllOrders() {
+            renderHistory(
+                db.collection('orders')
+                    .where('customerPhone', '==', USER.phone)
+            );
+            closeSidebars();
+        }
+
+        function showShopOrders() {
+            if (!activeShop) return;
+            renderHistory(
+                db.collection('orders')
+                    .where('customerPhone', '==', USER.phone)
+                    .where('shopId', '==', activeShop.id)
+            );
+            closeSidebars();
+        }
+
+        function renderHistory(query) {
+            document.getElementById('history-modal').classList.add('open');
+            const container = document.getElementById('history-content');
+            container.innerHTML = '<div class="loading"><i class="fas fa-circle-notch fa-spin"></i><p>Loading orders...</p></div>';
+            
+            query.orderBy('createdAt', 'desc').limit(50).onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <h3>No Orders Yet</h3>
+                            <p>Your order history will appear here</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = snapshot.docs.map(doc => {
+                    const order = doc.data();
+                    const date = order.createdAt?.toDate();
+                    const dateStr = date ? date.toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : 'Unknown';
+                    
+                    const statusColors = {
+                        pending: 'var(--warning)',
+                        cooking: 'var(--accent)',
+                        ready: 'var(--success)',
+                        completed: 'var(--success)',
+                        rejected: 'var(--error)'
+                    };
+                    
+                    return `
+                        <div class="menu-item" style="cursor: pointer;" 
+                             onclick="showOrderDetail('${doc.id}', ${order.totalAmount}, '${order.status}', '${escapeHtml(JSON.stringify(order.items))}', '${dateStr}', '${escapeHtml(order.shopName || 'Shop')}')">
+                            <div class="item-details">
+                                <div class="item-name">${escapeHtml(order.shopName || 'Shop')}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">${dateStr}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="item-price">₹${order.totalAmount}</div>
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: ${statusColors[order.status] || 'var(--text-secondary)'}">
+                                    ${order.status}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function closeHistory() {
+            document.getElementById('history-modal').classList.remove('open');
+        }
+
+        function showOrderDetail(id, total, status, itemsStr, date, shopName) {
+            try {
+                const items = JSON.parse(itemsStr);
+                
+                document.getElementById('od-status').innerText = status;
+                document.getElementById('od-total').innerText = '₹' + total;
+                
+                const statusColors = {
+                    pending: 'var(--warning)',
+                    cooking: 'var(--accent)',
+                    ready: 'var(--success)',
+                    completed: 'var(--success)',
+                    rejected: 'var(--error)'
+                };
+                document.getElementById('od-status').style.color = statusColors[status] || 'var(--text-secondary)';
+                
+                document.getElementById('od-items').innerHTML = items.map(item => `
+                    <div class="order-item">
+                        <span>${escapeHtml(item.name)} × ${item.qty}</span>
+                        <span>₹${item.price * item.qty}</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('order-detail-popup').classList.add('open');
+            } catch (error) {
+                console.error('Error showing order detail:', error);
+                showToast('Error loading order details', 'error');
+            }
+        }
+
+        function closeOrderDetail() {
+            document.getElementById('order-detail-popup').classList.remove('open');
+        }
+
+        // Sidebar Management
+        function toggleMainSidebar() {
+            document.getElementById('sidebar-main').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('open');
-            document.getElementById('sidebar-overlay').style.display = document.getElementById('sidebar-main').classList.contains('open') ? 'block' : 'none';
         }
-        
+
         function toggleShopSidebar() {
             document.getElementById('sidebar-shop').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('open');
-            document.getElementById('sidebar-overlay').style.display = document.getElementById('sidebar-shop').classList.contains('open') ? 'block' : 'none';
         }
 
         function closeSidebars() {
             document.getElementById('sidebar-main').classList.remove('open');
             document.getElementById('sidebar-shop').classList.remove('open');
             document.getElementById('sidebar-overlay').classList.remove('open');
-            document.getElementById('sidebar-overlay').style.display = 'none';
         }
 
-        function showAllOrders() {
-            renderHistory(db.collection('orders').where('customerPhone', '==', USER.phone));
-            closeSidebars();
-        }
-        function showShopOrders() {
-            renderHistory(db.collection('orders').where('customerPhone', '==', USER.phone).where('shopId', '==', activeShop.id));
-            closeSidebars();
-        }
-
-        function renderHistory(q) {
-            document.getElementById('history-modal').classList.add('open');
-            q.orderBy('timestamp', 'desc').onSnapshot(snap => {
-                document.getElementById('history-content').innerHTML = snap.docs.map(doc => {
-                    const d = doc.data();
-                    return `<div class="glass-card p-3" onclick="showOrderDetail('${doc.id}', '${d.totalAmount}', '${d.status}', '${escape(JSON.stringify(d.items))}')">
-                        <div class="flex justify-between mb-1"><span class="font-bold text-white text-sm">₹${d.totalAmount}</span><span class="text-xs text-orange-400 uppercase">${d.status}</span></div>
-                        <p class="text-xs text-gray-500">${new Date(d.timestamp?.toDate()).toLocaleDateString()}</p>
-                    </div>`;
-                }).join('');
-            });
-        }
-
-        function showOrderDetail(id, total, status, itemsStr) {
-            const items = JSON.parse(unescape(itemsStr));
-            document.getElementById('od-total').innerText = '₹' + total;
-            document.getElementById('od-status').innerText = status;
-            document.getElementById('od-items').innerHTML = items.map(i => `<div class="flex justify-between text-sm text-gray-300"><span>${i.name} x${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('');
-            document.getElementById('order-detail-popup').classList.add('open');
-        }
-
+        // Utility Functions
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
+            const R = 6371; // Earth's radius in km
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
+            return R * c;
         }
-        function shareApp() { if(navigator.share) navigator.share({title:'Nearby Bazar', url:window.location.href}); }
+
+        function shareApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Nearby Bazar',
+                    text: 'Order fresh items from nearby shops!',
+                    url: window.location.href
+                }).catch(err => console.log('Share cancelled'));
+            } else {
+                showToast('Share not supported on this device', 'info');
+            }
+        }
+
+        // Service Worker for PWA (Optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
