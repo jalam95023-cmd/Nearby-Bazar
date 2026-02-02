@@ -613,3 +613,759 @@
         }
     </style>
 </head>
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>Vendor Dashboard</h1>
+                <p>Nearby Bazar Partner</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <div id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+                <div id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+            </div>
+            
+            <div id="form-login">
+                <input type="text" id="login-shopid" class="form-input" placeholder="Shop ID">
+                <input type="password" id="login-password" class="form-input" placeholder="Password">
+                <button onclick="handleLogin()" class="btn-primary">
+                    <i class="fas fa-right-to-bracket"></i> Login
+                </button>
+            </div>
+            
+            <div id="form-register" style="display: none;">
+                <input type="text" id="reg-shopname" class="form-input" placeholder="Shop Name" maxlength="50">
+                <input type="text" id="reg-owner" class="form-input" placeholder="Owner Name" maxlength="50">
+                <input type="tel" id="reg-phone" class="form-input" placeholder="Phone Number" maxlength="10">
+                <input type="text" id="reg-upi" class="form-input" placeholder="UPI ID">
+                <input type="password" id="reg-password" class="form-input" placeholder="Create Password">
+                <input type="password" id="reg-confirm" class="form-input" placeholder="Confirm Password">
+                <button onclick="handleRegister()" class="btn-primary">
+                    <i class="fas fa-store"></i> Register Shop
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div>
+                    <h1 style="font-size: 18px; font-weight: 800;" id="shop-name">Shop</h1>
+                    <p style="font-size: 12px; color: var(--text-dim);" id="shop-id">ID: ...</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div id="shop-toggle" class="shop-status-toggle status-closed" onclick="toggleShopStatus()">
+                    CLOSED
+                </div>
+                <button class="icon-btn" onclick="toggleSound()">
+                    <i id="sound-icon" class="fas fa-volume-mute"></i>
+                </button>
+                <button class="icon-btn" onclick="openSettings()">
+                    <i class="fas fa-gear"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Today's Sales</div>
+                <div class="stat-value">₹<span id="stat-sales">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Orders</div>
+                <div class="stat-value" id="stat-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" id="stat-pending">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Menu Items</div>
+                <div class="stat-value" id="stat-items">0</div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <div id="tab-live" class="tab active" onclick="switchView('live')">
+                <i class="fas fa-bell"></i> Live Orders
+            </div>
+            <div id="tab-history" class="tab" onclick="switchView('history')">
+                <i class="fas fa-history"></i> History
+            </div>
+            <div id="tab-menu" class="tab" onclick="switchView('menu')">
+                <i class="fas fa-utensils"></i> Menu
+            </div>
+        </div>
+        
+        <!-- Views -->
+        <div id="view-live" class="orders-container"></div>
+        <div id="view-history" class="orders-container" style="display: none;"></div>
+        <div id="view-menu" class="orders-container" style="display: none;"></div>
+    </div>
+
+    <!-- Menu Item Modal -->
+    <div id="menu-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Menu Item</h2>
+                <button onclick="closeModal('menu-modal')" class="close-btn">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            
+            <input type="text" id="item-name" class="form-input" placeholder="Item Name">
+            <input type="number" id="item-price" class="form-input" placeholder="Price (₹)">
+            <input type="text" id="item-category" class="form-input" placeholder="Category">
+            <input type="number" id="item-stock" class="form-input" placeholder="Stock (optional)">
+            <input type="url" id="item-image" class="form-input" placeholder="Image URL (optional)">
+            
+            <button onclick="saveMenuItem()" class="btn-primary">
+                <i class="fas fa-plus"></i> Add Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Settings</h2>
+                <button onclick="closeModal('settings-modal')" class="close-btn">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="stat-label">Delivery Settings</label>
+                <input type="number" id="set-delivery" class="form-input" placeholder="Delivery Charge (₹)">
+                <input type="number" id="set-min" class="form-input" placeholder="Minimum Order (₹)">
+            </div>
+            
+            <button onclick="saveSettings()" class="btn-primary">Save Settings</button>
+            
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <button onclick="logout()" style="background: var(--error);" class="btn-primary">
+                    <i class="fas fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko",
+            authDomain: "nearby-bazar.firebaseapp.com",
+            projectId: "nearby-bazar",
+            storageBucket: "nearby-bazar.firebasestorage.app",
+            messagingSenderId: "183262510084",
+            appId: "1:183262510084:web:909fa3aac2f2429a7d8951"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Security Helpers
+        function sanitize(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
+        function validatePhone(phone) {
+            return /^[6-9]\d{9}$/.test(phone);
+        }
+
+        function showToast(msg, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // Generate Shop ID
+        function generateShopId() {
+            return 'SHOP' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+        }
+
+        // Hash password (basic - in production use bcrypt)
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Global State
+        let SHOP = null;
+        let liveOrders = [];
+        let allOrders = [];
+        let menuItems = [];
+        let soundEnabled = false;
+        let notificationAudio = document.getElementById('notification-sound');
+
+        // Auth Functions
+        function switchAuthTab(tab) {
+            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+            document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+        }
+
+        async function handleLogin() {
+            const shopId = document.getElementById('login-shopid').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!shopId || !password) {
+                showToast('Please enter Shop ID and Password');
+                return;
+            }
+            
+            try {
+                const doc = await db.collection('shops').doc(shopId).get();
+                
+                if (!doc.exists) {
+                    showToast('Shop ID not found');
+                    return;
+                }
+                
+                const shop = doc.data();
+                const hashedPassword = await hashPassword(password);
+                
+                if (shop.password !== hashedPassword) {
+                    showToast('Incorrect password');
+                    return;
+                }
+                
+                if (shop.status === 'pending') {
+                    showToast('Your shop is pending admin approval');
+                    return;
+                }
+                
+                if (shop.status === 'suspended') {
+                    showToast('Your shop has been suspended. Contact admin.');
+                    return;
+                }
+                
+                SHOP = { id: doc.id, ...shop };
+                localStorage.setItem('shopAuth', JSON.stringify({ id: doc.id, password: hashedPassword }));
+                
+                initDashboard();
+                showToast('Login successful!');
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Login failed. Please try again.');
+            }
+        }
+
+        async function handleRegister() {
+            const shopName = document.getElementById('reg-shopname').value.trim();
+            const ownerName = document.getElementById('reg-owner').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const upiId = document.getElementById('reg-upi').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            
+            // Validation
+            if (!shopName || !ownerName || !phone || !upiId || !password) {
+                showToast('Please fill all fields');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('Invalid phone number');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters');
+                return;
+            }
+            
+            if (password !== confirm) {
+                showToast('Passwords do not match');
+                return;
+            }
+            
+            try {
+                const shopId = generateShopId();
+                const hashedPassword = await hashPassword(password);
+                
+                const shopData = {
+                    shopId: shopId,
+                    shopName: sanitize(shopName),
+                    ownerName: sanitize(ownerName),
+                    phone: phone,
+                    upiId: sanitize(upiId),
+                    password: hashedPassword,
+                    status: 'pending',
+                    isOpen: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    settings: {
+                        deliveryCharge: 0,
+                        minOrder: 0
+                    }
+                };
+                
+                await db.collection('shops').doc(shopId).set(shopData);
+                
+                await Swal.fire({
+                    title: 'Registration Successful!',
+                    html: `<p>Your Shop ID: <strong>${shopId}</strong></p><p>Please save this ID for login.</p><p>Your shop will be live after admin approval.</p>`,
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6'
+                });
+                
+                // Auto-fill login
+                document.getElementById('login-shopid').value = shopId;
+                document.getElementById('login-password').value = password;
+                switchAuthTab('login');
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Registration failed. Please try again.');
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('shopAuth');
+                location.reload();
+            }
+        }
+
+        // Auto-login
+        window.addEventListener('DOMContentLoaded', async () => {
+            const auth = localStorage.getItem('shopAuth');
+            if (auth) {
+                try {
+                    const { id, password } = JSON.parse(auth);
+                    const doc = await db.collection('shops').doc(id).get();
+                    
+                    if (doc.exists && doc.data().password === password) {
+                        SHOP = { id: doc.id, ...doc.data() };
+                        initDashboard();
+                    } else {
+                        localStorage.removeItem('shopAuth');
+                    }
+                } catch (error) {
+                    console.error('Auto-login error:', error);
+                    localStorage.removeItem('shopAuth');
+                }
+            }
+        });
+
+        // Dashboard
+        function initDashboard() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            document.getElementById('shop-name').textContent = SHOP.shopName;
+            document.getElementById('shop-id').textContent = 'ID: ' + SHOP.id;
+            
+            updateShopStatus(SHOP.isOpen);
+            loadOrders();
+            loadMenu();
+            calculateStats();
+            
+            // Set up delivery settings
+            if (SHOP.settings) {
+                document.getElementById('set-delivery').value = SHOP.settings.deliveryCharge || 0;
+                document.getElementById('set-min').value = SHOP.settings.minOrder || 0;
+            }
+        }
+
+        // Shop Status Toggle
+        function toggleShopStatus() {
+            const newStatus = !SHOP.isOpen;
+            db.collection('shops').doc(SHOP.id).update({ isOpen: newStatus });
+            SHOP.isOpen = newStatus;
+            updateShopStatus(newStatus);
+            showToast(newStatus ? 'Shop is now OPEN' : 'Shop is now CLOSED');
+        }
+
+        function updateShopStatus(isOpen) {
+            const toggle = document.getElementById('shop-toggle');
+            toggle.textContent = isOpen ? 'OPEN' : 'CLOSED';
+            toggle.className = 'shop-status-toggle ' + (isOpen ? 'status-open' : 'status-closed');
+        }
+
+        // Sound
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-icon').className = soundEnabled ? 'fas fa-volume-high' : 'fas fa-volume-mute';
+            showToast(soundEnabled ? 'Sound enabled' : 'Sound muted');
+        }
+
+        function playNotification() {
+            if (soundEnabled) {
+                notificationAudio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        // Orders Management
+        function loadOrders() {
+            // Live orders
+            db.collection('orders')
+                .where('shopId', '==', SHOP.id)
+                .where('status', 'in', ['pending', 'cooking', 'ready'])
+                .onSnapshot(snapshot => {
+                    const newOrders = [];
+                    snapshot.forEach(doc => {
+                        newOrders.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Check for new orders
+                    if (newOrders.length > liveOrders.length) {
+                        playNotification();
+                        showToast('New order received!');
+                    }
+                    
+                    liveOrders = newOrders.sort((a, b) => {
+                        const order = { pending: 1, cooking: 2, ready: 3 };
+                        return order[a.status] - order[b.status];
+                    });
+                    
+                    renderLiveOrders();
+                    calculateStats();
+                });
+            
+            // History
+            db.collection('orders')
+                .where('shopId', '==', SHOP.id)
+                .where('status', 'in', ['completed', 'rejected'])
+                .orderBy('updatedAt', 'desc')
+                .limit(50)
+                .onSnapshot(snapshot => {
+                    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (document.getElementById('view-history').style.display !== 'none') {
+                        renderHistory();
+                    }
+                });
+        }
+
+        function renderLiveOrders() {
+            const container = document.getElementById('view-live');
+            
+            if (!liveOrders.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>All Clear!</h3>
+                        <p>No pending orders at the moment</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = liveOrders.map(order => {
+                const items = order.items.map(item => `
+                    <div class="order-item">
+                        <span>${sanitize(item.name)} × ${item.qty}</span>
+                        <span>₹${item.price * item.qty}</span>
+                    </div>
+                `).join('');
+                
+                let actions = '';
+                if (order.status === 'pending') {
+                    actions = `
+                        <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'cooking')">
+                            <i class="fas fa-check"></i> Accept
+                        </button>
+                        <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    `;
+                } else if (order.status === 'cooking') {
+                    actions = `
+                        <button class="btn btn-ready" onclick="updateOrderStatus('${order.id}', 'ready')">
+                            <i class="fas fa-clock"></i> Mark Ready
+                        </button>
+                    `;
+                } else if (order.status === 'ready') {
+                    actions = `
+                        <button class="btn btn-complete" onclick="updateOrderStatus('${order.id}', 'completed')">
+                            <i class="fas fa-check-double"></i> Complete
+                        </button>
+                    `;
+                }
+                
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-customer">${sanitize(order.customerName)}</div>
+                                <div class="order-phone">${order.customerPhone}</div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                    ${sanitize(order.customerAddress)}
+                                </div>
+                            </div>
+                            <span class="order-status-badge status-${order.status}">
+                                ${order.status}
+                            </span>
+                        </div>
+                        
+                        <div class="order-items">${items}</div>
+                        
+                        <div class="order-total">
+                            <span style="font-weight: 600;">Total Amount</span>
+                            <span class="order-amount">₹${order.totalAmount}</span>
+                        </div>
+                        
+                        <div style="background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                            <strong>Payment:</strong> ${order.paymentMode}
+                        </div>
+                        
+                        <div class="order-actions">${actions}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('view-history');
+            
+            if (!allOrders.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <h3>No History Yet</h3>
+                        <p>Completed orders will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = allOrders.map(order => {
+                const date = order.updatedAt?.toDate();
+                const dateStr = date ? date.toLocaleDateString('en-IN') : 'Unknown';
+                
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-customer">${sanitize(order.customerName)}</div>
+                                <div class="order-phone">${dateStr}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="order-amount">₹${order.totalAmount}</div>
+                                <span style="font-size: 11px; color: ${order.status === 'completed' ? 'var(--success)' : 'var(--error)'}; font-weight: 700; text-transform: uppercase;">
+                                    ${order.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                await db.collection('orders').doc(orderId).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                const statusMessages = {
+                    cooking: 'Order accepted',
+                    ready: 'Order marked as ready',
+                    completed: 'Order completed',
+                    rejected: 'Order rejected'
+                };
+                
+                showToast(statusMessages[newStatus] || 'Status updated');
+            } catch (error) {
+                console.error('Status update error:', error);
+                showToast('Failed to update status');
+            }
+        }
+
+        // Menu Management
+        function loadMenu() {
+            db.collection('shops').doc(SHOP.id).collection('menu').onSnapshot(snapshot => {
+                menuItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (document.getElementById('view-menu').style.display !== 'none') {
+                    renderMenu();
+                }
+                calculateStats();
+            });
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('view-menu');
+            
+            const html = `
+                <button onclick="openModal('menu-modal')" class="btn-primary" style="margin-bottom: 20px;">
+                    <i class="fas fa-plus"></i> Add Menu Item
+                </button>
+                
+                ${menuItems.length ? menuItems.map(item => `
+                    <div class="menu-item-card">
+                        <img src="${item.image || 'https://via.placeholder.com/60'}" 
+                             alt="${sanitize(item.name)}" 
+                             class="item-image"
+                             onerror="this.src='https://via.placeholder.com/60'">
+                        <div class="item-info">
+                            <div class="item-name">${sanitize(item.name)}</div>
+                            <div class="item-price">₹${item.price}</div>
+                            <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                ${item.category || 'Uncategorized'}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="item-toggle ${item.available ? 'toggle-active' : ''}" 
+                                    onclick="toggleItemAvailability('${item.id}', ${!item.available})">
+                                <i class="fas fa-${item.available ? 'eye' : 'eye-slash'}"></i>
+                            </button>
+                            <button class="item-toggle" onclick="deleteMenuItem('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('') : '<div class="empty-state"><i class="fas fa-utensils"></i><h3>No Menu Items</h3><p>Add your first menu item</p></div>'}
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        async function saveMenuItem() {
+            const name = document.getElementById('item-name').value.trim();
+            const price = parseInt(document.getElementById('item-price').value);
+            const category = document.getElementById('item-category').value.trim();
+            const stock = parseInt(document.getElementById('item-stock').value) || null;
+            const image = document.getElementById('item-image').value.trim();
+            
+            if (!name || !price) {
+                showToast('Please enter item name and price');
+                return;
+            }
+            
+            try {
+                await db.collection('shops').doc(SHOP.id).collection('menu').add({
+                    name: sanitize(name),
+                    price: price,
+                    category: sanitize(category) || 'Others',
+                    stock: stock,
+                    image: image || null,
+                    available: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                closeModal('menu-modal');
+                showToast('Menu item added');
+                
+                // Clear form
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-price').value = '';
+                document.getElementById('item-category').value = '';
+                document.getElementById('item-stock').value = '';
+                document.getElementById('item-image').value = '';
+                
+            } catch (error) {
+                console.error('Add item error:', error);
+                showToast('Failed to add item');
+            }
+        }
+
+        async function toggleItemAvailability(itemId, available) {
+            try {
+                await db.collection('shops').doc(SHOP.id).collection('menu').doc(itemId).update({
+                    available: available
+                });
+                showToast(available ? 'Item is now available' : 'Item is now unavailable');
+            } catch (error) {
+                console.error('Toggle error:', error);
+                showToast('Failed to update item');
+            }
+        }
+
+        async function deleteMenuItem(itemId) {
+            if (!confirm('Delete this item?')) return;
+            
+            try {
+                await db.collection('shops').doc(SHOP.id).collection('menu').doc(itemId).delete();
+                showToast('Item deleted');
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Failed to delete item');
+            }
+        }
+
+        // Settings
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('open');
+        }
+
+        async function saveSettings() {
+            const deliveryCharge = parseInt(document.getElementById('set-delivery').value) || 0;
+            const minOrder = parseInt(document.getElementById('set-min').value) || 0;
+            
+            try {
+                await db.collection('shops').doc(SHOP.id).update({
+                    'settings.deliveryCharge': deliveryCharge,
+                    'settings.minOrder': minOrder
+                });
+                
+                SHOP.settings = { deliveryCharge, minOrder };
+                closeModal('settings-modal');
+                showToast('Settings saved');
+            } catch (error) {
+                console.error('Save settings error:', error);
+                showToast('Failed to save settings');
+            }
+        }
+
+        // Stats
+        function calculateStats() {
+            // Today's sales
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todaySales = allOrders
+                .filter(o => o.status === 'completed' && o.updatedAt?.toDate() >= today)
+                .reduce((sum, o) => sum + o.totalAmount, 0);
+            
+            const todayOrders = allOrders.filter(o => o.updatedAt?.toDate() >= today).length;
+            
+            document.getElementById('stat-sales').textContent = todaySales;
+            document.getElementById('stat-orders').textContent = todayOrders;
+            document.getElementById('stat-pending').textContent = liveOrders.filter(o => o.status === 'pending').length;
+            document.getElementById('stat-items').textContent = menuItems.filter(i => i.available).length;
+        }
+
+        // View Switching
+        function switchView(view) {
+            ['live', 'history', 'menu'].forEach(v => {
+                document.getElementById('view-' + v).style.display = v === view ? 'block' : 'none';
+                document.getElementById('tab-' + v).classList.toggle('active', v === view);
+            });
+            
+            if (view === 'history') renderHistory();
+            if (view === 'menu') renderMenu();
+        }
+
+        // Modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('open');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+    </script>
+</body>
+</html>
