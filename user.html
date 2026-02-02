@@ -2,140 +2,444 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Now</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nearby Bazar</title>
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8FAFC; padding-bottom: 100px; }
-        .header { background: white; padding: 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .shop-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; display: flex; align-items: center; cursor: pointer; }
-        .menu-sheet { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; display: none; }
-        .cart-float { position: fixed; bottom: 25px; left: 5%; width: 90%; background: #111; color: white; padding: 18px 25px; border-radius: 20px; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; display: none; z-index: 3000; }
+        /* SGMC Aesthetic (Dark Theme) */
+        :root { --bg: #050505; --card: #141414; --border: #333; --accent: #F97316; --text: #fff; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
         
-        /* Tracker */
-        #tracker { background: #FEF3C7; color: #92400E; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; border-left: 5px solid #F59E0B; }
+        .glass-card { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; }
+        .shop-card { transition: transform 0.2s; border: 1px solid var(--border); background: var(--card); border-radius: 16px; padding: 15px; margin-bottom: 12px; }
+        .shop-card:active { transform: scale(0.98); }
+        
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px; z-index: 50; }
+        .nav-item { color: #666; text-align: center; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 18px; }
+
+        /* Auth Screen */
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+        input { background: #222; border: 1px solid #444; color: white; padding: 14px; width: 100%; border-radius: 12px; margin-bottom: 12px; outline: none; }
+        .btn-primary { background: linear-gradient(to right, #ea580c, #c2410c); color: white; padding: 14px; border-radius: 12px; font-weight: bold; width: 100%; text-align: center; }
+
+        /* Cart Floating Bar */
+        #cart-bar { position: fixed; bottom: 80px; left: 15px; right: 15px; background: linear-gradient(to right, #ea580c, #ca8a04); color: white; padding: 12px 20px; border-radius: 12px; display: none; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 40; cursor: pointer; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Order Animation */
+        #success-anim { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .fs-modal { position: fixed; inset: 0; background: var(--bg); z-index: 100; transform: translateX(100%); transition: 0.3s; overflow-y: auto; }
+        .fs-modal.open { transform: translateX(0); }
     </style>
 </head>
 <body>
 
-    <div id="home">
-        <div class="header">
-            <h5 class="fw-bold m-0"><i class="fas fa-map-marker-alt text-danger"></i> Nearby Bazar</h5>
-            <input type="text" class="form-control mt-3 rounded-pill bg-light border-0" placeholder="Search chai, food..." onkeyup="filter(this.value)">
+    <div id="auth-screen">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-orange-500 mb-2">Nearby Bazar</h1>
+            <p class="text-gray-500 text-sm">Customer Login</p>
         </div>
-        <div class="container mt-4">
-            <div id="tracker">
-                <div class="d-flex justify-content-between"><strong><i class="fas fa-clock"></i> Active Order</strong><span id="t-status">Preparing...</span></div>
-                <div class="mt-2">OTP: <strong id="t-otp" class="fs-5">--</strong></div>
-                <button class="btn btn-sm btn-outline-danger mt-2 w-100" onclick="reportIssue()">Report: Item Not Received</button>
+        <input type="text" id="user-name" placeholder="Your Name">
+        <input type="tel" id="user-phone" placeholder="Mobile Number (10 digits)">
+        <button onclick="login()" class="btn-primary">Start Ordering</button>
+    </div>
+
+    <div id="view-home" class="p-4 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-orange-500">Nearby Bazar</h1>
+                <p class="text-xs text-gray-400" id="loc-status"><i class="fas fa-map-marker-alt mr-1"></i> Detecting Location...</p>
             </div>
-            <h6 class="text-muted fw-bold mb-3">AVAILABLE SHOPS</h6>
-            <div id="shops">Loading...</div>
+            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-orange-500 border border-gray-700" onclick="logout()">
+                <i class="fas fa-power-off text-xs"></i>
+            </div>
+        </div>
+
+        <div id="shops-list" class="space-y-3 pb-20">
+            <div class="text-center text-gray-600 mt-10">
+                <i class="fas fa-circle-notch fa-spin text-2xl"></i><br>Finding shops near you...
+            </div>
         </div>
     </div>
 
-    <div id="menu" class="menu-sheet">
-        <div class="p-3 shadow-sm sticky-top bg-white d-flex align-items-center">
-            <button class="btn btn-light rounded-circle me-3" onclick="closeMenu()"><i class="fas fa-arrow-left"></i></button>
-            <h5 class="m-0 fw-bold" id="m-title">Shop</h5>
+    <div id="view-shop" class="fs-modal p-0">
+        <div class="sticky top-0 bg-[#050505]/95 backdrop-blur-md z-30 p-4 border-b border-gray-800 flex justify-between items-center">
+            <button onclick="closeShop()" class="w-8 h-8 rounded-full bg-gray-800 text-white"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="font-bold text-lg text-white" id="shop-title">Shop Name</h2>
+            <div class="w-8"></div> 
         </div>
-        <div class="container mt-3" id="m-list"></div>
-        <div style="height:100px;"></div>
-    </div>
 
-    <div id="cart-btn" class="cart-float" onclick="checkout()">
-        <span><span id="c-count">0</span> Items</span><span>Place Order <i class="fas fa-arrow-right"></i></span>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-        const db = getFirestore(initializeApp({ apiKey: "AIzaSyDm_yS9tmdfnMmhoUiGwLSAnQpz5trXuko", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:909fa3aac2f2429a7d8951" }));
+        <div id="menu-list" class="p-4 space-y-3 pb-32"></div>
         
-        let curShop = null, cart = [], total = 0, lastOid = localStorage.getItem("lastOid");
+        <div id="cart-bar" onclick="openCheckout()">
+            <div class="flex items-center gap-3">
+                <div class="bg-white text-orange-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs" id="cart-count">0</div>
+                <div><span class="font-bold text-sm">₹<span id="cart-total">0</span></span></div>
+            </div>
+            <span class="font-bold text-xs">View Cart <i class="fas fa-chevron-right ml-1"></i></span>
+        </div>
+    </div>
 
-        // 1. Load Shops (List View)
-        onSnapshot(collection(db, "shops"), (snap) => {
-            const div = document.getElementById("shops"); div.innerHTML = "";
-            let found = false;
-            snap.forEach(d => {
-                const s = d.data();
-                if(s.status === 'verified') {
-                    found = true;
-                    const op = s.isOpen ? 1 : 0.6;
-                    div.innerHTML += `<div class="shop-card shop-item" style="opacity:${op}" onclick="openShop('${d.id}','${s.shopName}', ${s.isOpen})">
-                        <div class="bg-light rounded p-3 me-3 fs-3">🏪</div>
-                        <div><h6 class="fw-bold m-0">${s.shopName}</h6><small class="text-muted">${s.isOpen?'Open':'Closed'}</small></div>
-                    </div>`;
-                }
-            });
-            if(!found) div.innerHTML = "<p class='text-center text-muted'>No shops nearby.</p>";
-        });
+    <div id="checkout-modal" class="fixed inset-0 bg-black/95 z-[150] hidden p-4 flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-white">Checkout</h2>
+            <button onclick="document.getElementById('checkout-modal').classList.add('hidden')" class="text-gray-400"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto">
+            <div class="bg-[#1a1a1a] p-4 rounded-xl border border-[#333] mb-4">
+                <h3 class="font-bold text-sm text-gray-400 mb-2">Order For</h3>
+                <div class="flex gap-2 mb-2">
+                    <button onclick="toggleOrderType('self')" id="btn-self" class="flex-1 py-2 rounded bg-orange-600 text-white text-xs font-bold">Self</button>
+                    <button onclick="toggleOrderType('other')" id="btn-other" class="flex-1 py-2 rounded bg-gray-800 text-gray-400 text-xs font-bold">Someone Else</button>
+                </div>
+                <div id="other-info" class="hidden space-y-2">
+                    <input id="rec-name" placeholder="Receiver Name" class="text-xs p-3">
+                    <input id="rec-phone" type="tel" placeholder="Receiver Phone" class="text-xs p-3">
+                </div>
+                <input id="address-input" placeholder="Flat / Room No." class="text-xs p-3 mt-2">
+            </div>
 
-        if(lastOid) track(lastOid);
+            <div class="bg-[#1a1a1a] p-4 rounded-xl border border-[#333] mb-4">
+                <h3 class="font-bold text-sm text-gray-400 mb-2">Payment</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setPay('Cash')" id="pay-cash" class="py-3 rounded bg-gray-800 text-gray-400 text-xs font-bold border border-gray-700">Cash</button>
+                    <button onclick="setPay('UPI')" id="pay-upi" class="py-3 rounded bg-gray-800 text-gray-400 text-xs font-bold border border-gray-700">UPI</button>
+                    <button onclick="setPay('Udhaar')" id="pay-udhaar" class="py-3 rounded bg-gray-800 text-gray-400 text-xs font-bold border border-gray-700">Udhaar</button>
+                </div>
+            </div>
 
-        function track(id) {
-            onSnapshot(query(collection(db, "orders"), where("__name__", "==", id)), (snap) => {
-                if(!snap.empty) {
-                    const d = snap.docs[0].data();
-                    document.getElementById("tracker").style.display = 'block';
-                    document.getElementById("t-status").innerText = d.status.toUpperCase();
-                    document.getElementById("t-otp").innerText = d.otp;
-                    if(d.status === 'delivered') { setTimeout(()=>{document.getElementById("tracker").style.display='none'; localStorage.removeItem("lastOid");}, 5000); }
-                }
-            });
+            <div class="bg-[#1a1a1a] p-4 rounded-xl border border-[#333] mb-4">
+                <div class="flex justify-between text-sm mb-1"><span class="text-gray-400">Total</span><span class="text-white font-bold">₹<span id="co-total">0</span></span></div>
+                <div class="flex justify-between text-sm mb-1"><span class="text-gray-400">Delivery</span><span class="text-orange-400" id="co-delivery">FREE</span></div>
+            </div>
+        </div>
+
+        <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-600 to-yellow-500 text-white py-4 rounded-xl font-bold shadow-lg text-lg">Swipe to Order <i class="fas fa-arrow-right ml-2"></i></button>
+    </div>
+
+    <div id="view-orders" class="p-4 hidden pb-20">
+        <h2 class="text-xl font-bold text-white mb-4">My Orders</h2>
+        <div id="orders-list" class="space-y-3"></div>
+    </div>
+
+    <div id="view-udhaar" class="p-4 hidden pb-20">
+        <h2 class="text-xl font-bold text-white mb-4">Udhaar History</h2>
+        <div id="udhaar-list" class="space-y-3"></div>
+    </div>
+
+    <div class="bottom-nav" id="nav-bar" style="display:none;">
+        <div class="nav-item active" onclick="switchTab('home')" id="nav-home"><i class="fas fa-store"></i><span>Home</span></div>
+        <div class="nav-item" onclick="switchTab('orders')" id="nav-orders"><i class="fas fa-receipt"></i><span>Orders</span></div>
+        <div class="nav-item" onclick="switchTab('udhaar')" id="nav-udhaar"><i class="fas fa-wallet"></i><span>Udhaar</span></div>
+        <div class="nav-item" onclick="shareApp()"><i class="fas fa-share-alt"></i><span>Share</span></div>
+    </div>
+
+    <div id="success-anim">
+        <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+        <h2 class="text-2xl font-bold text-white">Order Placed!</h2>
+        <p class="text-gray-400 text-sm mt-2">Redirecting...</p>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBadYpoNTL0dHkBQO4UddRVtPIfUOlf-bA", authDomain: "nearby-bazar.firebaseapp.com", projectId: "nearby-bazar", storageBucket: "nearby-bazar.firebasestorage.app", messagingSenderId: "183262510084", appId: "1:183262510084:web:85d9a50a3b51b30aae351f", measurementId: "G-4996NPF55N" };
+        firebase.initializeApp(firebaseConfig); 
+        const db = firebase.firestore();
+
+        let USER = JSON.parse(localStorage.getItem('nb_user'));
+        let currentLocation = null;
+        let activeShop = null;
+        let cart = [];
+        let payMode = 'Cash';
+        let isSelf = true;
+
+        // --- AUTH ---
+        if(USER) {
+            document.getElementById('auth-screen').style.display='none';
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('nav-bar').style.display='flex';
+            initApp();
         }
 
-        window.openShop = async (id, name, open) => {
-            if(!open) return Swal.fire("Closed","Shop is offline","info");
-            curShop = id; document.getElementById("m-title").innerText = name;
-            document.getElementById("home").style.display='none'; document.getElementById("menu").style.display='block';
-            const list = document.getElementById("m-list"); list.innerHTML = "Loading...";
-            const items = await getDocs(collection(db, `shops/${id}/inventory`));
-            list.innerHTML = "";
-            items.forEach(d => {
-                const i = d.data();
-                list.innerHTML += `<div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                    <div><strong>${i.name}</strong><br>₹${i.price}</div>
-                    <button class="btn btn-sm btn-outline-dark" onclick="add('${i.name}',${i.price})">ADD</button>
-                </div>`;
-            });
-        };
-
-        window.add = (n, p) => { cart.push({name:n, price:p}); total+=parseInt(p); updCart(); };
-        function updCart() {
-            document.getElementById("c-count").innerText = cart.length;
-            document.getElementById("cart-btn").style.display = cart.length?'flex':'none';
+        function login() {
+            const name = document.getElementById('user-name').value.trim();
+            const phone = document.getElementById('user-phone').value.trim();
+            if(name && phone.length === 10) {
+                USER = { name, phone };
+                localStorage.setItem('nb_user', JSON.stringify(USER));
+                location.reload();
+            } else {
+                alert("Enter valid details");
+            }
         }
 
-        window.checkout = async () => {
-            const { value: mode } = await Swal.fire({ title: 'Payment Mode', input: 'select', inputOptions: { 'Cash': 'Cash', 'Udhar': 'Udhar (Credit)' }, showCancelButton: true });
-            if(mode) {
-                const otp = Math.floor(1000 + Math.random() * 9000);
-                const ref = await addDoc(collection(db, "orders"), {
-                    shopId: curShop, items: cart, totalAmount: total, otp: otp,
-                    status: 'new', customerName: 'Guest User', paymentMode: mode, disputeStatus: 'none', timestamp: new Date()
+        function logout() { localStorage.removeItem('nb_user'); location.reload(); }
+
+        // --- HOME & SHOPS ---
+        function initApp() {
+            navigator.geolocation.getCurrentPosition(
+                (p) => {
+                    currentLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
+                    document.getElementById('loc-status').innerHTML = `<i class="fas fa-check-circle text-green-500"></i> Location Active`;
+                    loadShops();
+                },
+                (e) => {
+                    document.getElementById('loc-status').innerHTML = `<i class="fas fa-exclamation-circle text-red-500"></i> GPS Permission Required`;
+                    alert("Enable GPS for Nearby Shops");
+                }
+            );
+        }
+
+        function loadShops() {
+            db.collection('shops').where('status', '==', 'verified').onSnapshot(snap => {
+                const list = document.getElementById('shops-list');
+                list.innerHTML = "";
+                let count = 0;
+
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    const dist = getDistance(currentLocation.lat, currentLocation.lng, s.location.lat, s.location.lng);
+                    
+                    if(dist <= 3.0) { // 3KM Filter
+                        count++;
+                        const isOpen = s.isOpen;
+                        list.innerHTML += `
+                        <div class="shop-card flex justify-between items-center" onclick="openShop('${doc.id}', '${s.shopName}', ${isOpen}, ${dist})">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-xl">🏪</div>
+                                <div>
+                                    <h3 class="font-bold text-white text-lg">${s.shopName}</h3>
+                                    <p class="text-xs text-gray-400">${dist.toFixed(1)} km • ${s.ownerName}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="px-3 py-1 rounded text-[10px] font-bold uppercase ${isOpen ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800'}">
+                                    ${isOpen ? 'LIVE' : 'CLOSED'}
+                                </span>
+                            </div>
+                        </div>`;
+                    }
                 });
-                localStorage.setItem("lastOid", ref.id);
-                track(ref.id);
-                window.closeMenu();
-                Swal.fire("Order Placed", `OTP: ${otp}`, "success");
-            }
-        };
 
-        window.reportIssue = async () => {
-            if(confirm("Report to Admin?")) {
-                await updateDoc(doc(db, "orders", lastOid), { disputeStatus: 'active' });
-                Swal.fire("Reported", "Admin will contact you.", "warning");
-            }
-        };
+                if(count === 0) list.innerHTML = `<div class="text-center text-gray-500 mt-10">No shops within 3km range.</div>`;
+            });
+        }
 
-        window.closeMenu = () => { document.getElementById("menu").style.display='none'; document.getElementById("home").style.display='block'; cart=[]; total=0; updCart(); };
-        window.filter = (v) => { Array.from(document.getElementsByClassName('shop-item')).forEach(e => e.style.display = e.innerText.toLowerCase().includes(v.toLowerCase())?'flex':'none'); };
+        // --- SHOP & MENU ---
+        async function openShop(id, name, isOpen, dist) {
+            if(!isOpen) return Swal.fire("Closed", "Shop is currently offline.", "info");
+            
+            // Get Shop Data for Payment
+            const shopDoc = await db.collection('shops').doc(id).get();
+            activeShop = { id, name, ...shopDoc.data(), dist };
+            
+            document.getElementById('shop-title').innerText = name;
+            document.getElementById('view-shop').classList.add('open');
+            loadMenu(id);
+            cart = []; updateCartUI();
+        }
+
+        function closeShop() { document.getElementById('view-shop').classList.remove('open'); }
+
+        function loadMenu(shopId) {
+            db.collection('shops').doc(shopId).collection('inventory').where('available', '==', true).onSnapshot(snap => {
+                const list = document.getElementById('menu-list');
+                list.innerHTML = snap.docs.map(doc => {
+                    const i = doc.data();
+                    return `
+                    <div class="glass-card p-3 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            ${i.image ? `<img src="${i.image}" class="w-12 h-12 rounded-lg bg-gray-800 object-cover">` : ''}
+                            <div>
+                                <h4 class="font-bold text-white text-sm">${i.name}</h4>
+                                <p class="text-xs text-orange-400 font-bold">₹${i.price}</p>
+                            </div>
+                        </div>
+                        <button onclick="addToCart('${doc.id}', '${i.name}', ${i.price})" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold border border-gray-700 hover:bg-orange-600 transition">ADD</button>
+                    </div>`;
+                }).join('');
+            });
+        }
+
+        // --- CART & CHECKOUT ---
+        function addToCart(id, name, price) {
+            const exist = cart.find(x => x.id === id);
+            if(exist) exist.qty++; else cart.push({id, name, price, qty: 1});
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const bar = document.getElementById('cart-bar');
+            const total = cart.reduce((a,b) => a + (b.price * b.qty), 0);
+            const count = cart.reduce((a,b) => a + b.qty, 0);
+            
+            document.getElementById('cart-total').innerText = total;
+            document.getElementById('cart-count').innerText = count;
+            
+            if(count > 0) bar.style.display = 'flex'; else bar.style.display = 'none';
+        }
+
+        function openCheckout() {
+            if(activeShop.dist > 3.0) return Swal.fire("Error", "You moved too far from shop!", "error");
+            
+            const total = cart.reduce((a,b) => a + (b.price * b.qty), 0);
+            document.getElementById('co-total').innerText = total;
+            
+            // Delivery Logic
+            const s = activeShop.settings || {};
+            let fee = (s.minOrder && total < s.minOrder) ? 9999 : (s.deliveryCharge || 0);
+            if(s.freeDeliveryAbove && total >= s.freeDeliveryAbove) fee = 0;
+            
+            document.getElementById('co-delivery').innerText = fee===9999 ? `Min Order ₹${s.minOrder}` : fee===0 ? 'FREE' : `₹${fee}`;
+            
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.getElementById('checkout-modal').style.display = 'flex';
+        }
+
+        function toggleOrderType(t) {
+            isSelf = t === 'self';
+            document.getElementById('btn-self').className = isSelf ? "flex-1 py-2 rounded bg-orange-600 text-white text-xs font-bold" : "flex-1 py-2 rounded bg-gray-800 text-gray-400 text-xs font-bold";
+            document.getElementById('btn-other').className = !isSelf ? "flex-1 py-2 rounded bg-orange-600 text-white text-xs font-bold" : "flex-1 py-2 rounded bg-gray-800 text-gray-400 text-xs font-bold";
+            document.getElementById('other-info').classList.toggle('hidden', isSelf);
+        }
+
+        function setPay(m) {
+            payMode = m;
+            ['Cash','UPI','Udhaar'].forEach(x => {
+                document.getElementById('pay-'+x.toLowerCase()).classList.remove('bg-green-600', 'text-white', 'border-green-500');
+                document.getElementById('pay-'+x.toLowerCase()).classList.add('bg-gray-800', 'text-gray-400');
+            });
+            document.getElementById('pay-'+m.toLowerCase()).classList.add('bg-green-600', 'text-white', 'border-green-500');
+        }
+
+        async function placeOrder() {
+            const address = document.getElementById('address-input').value;
+            if(!address) return Swal.fire("Address?", "Enter Flat/Room No.", "warning");
+            
+            const recipient = isSelf ? null : { 
+                name: document.getElementById('rec-name').value, 
+                phone: document.getElementById('rec-phone').value 
+            };
+
+            const total = cart.reduce((a,b) => a + (b.price * b.qty), 0);
+            
+            // Payment
+            if(payMode === 'UPI') {
+                const upiUrl = `upi://pay?pa=${activeShop.upiId}&pn=${activeShop.shopName}&am=${total}&cu=INR`;
+                window.location.href = upiUrl;
+                // We assume payment success for prototype simplicity
+            }
+
+            const order = {
+                shopId: activeShop.id,
+                items: cart,
+                totalAmount: total,
+                paymentMode: payMode,
+                status: 'pending',
+                customerName: USER.name,
+                customerPhone: USER.phone,
+                customerAddress: address,
+                customerCoordinates: currentLocation,
+                recipient: recipient,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection('orders').add(order);
+            
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.getElementById('success-anim').style.display = 'flex';
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            
+            setTimeout(() => {
+                document.getElementById('success-anim').style.display = 'none';
+                closeShop();
+                switchTab('orders');
+            }, 2500);
+        }
+
+        // --- HISTORY & TRACKING ---
+        function loadMyOrders() {
+            db.collection('orders').where('customerPhone', '==', USER.phone).orderBy('timestamp', 'desc').onSnapshot(snap => {
+                const list = document.getElementById('orders-list');
+                list.innerHTML = snap.docs.map(doc => {
+                    const d = doc.data();
+                    const isLive = ['pending','cooking','ready'].includes(d.status);
+                    return `
+                    <div class="shop-card ${isLive ? 'border-l-4 border-orange-500' : ''}">
+                        <div class="flex justify-between mb-2">
+                            <h3 class="font-bold text-white text-sm">Order #${doc.id.slice(-4)}</h3>
+                            <span class="text-[10px] uppercase font-bold ${isLive ? 'text-orange-400 animate-pulse' : 'text-gray-500'}">${d.status}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2">${d.items.map(i=>i.name).join(', ')}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-lg text-white">₹${d.totalAmount}</span>
+                            ${d.status === 'pending' ? `<button onclick="cancelOrder('${doc.id}')" class="text-red-500 text-xs border border-red-500 px-2 py-1 rounded">Cancel</button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            });
+        }
+
+        function cancelOrder(id) {
+            if(confirm("Cancel Order?")) db.collection('orders').doc(id).update({status: 'cancelled'});
+        }
+
+        function loadUdhaar() {
+            // Need to aggregate from orders or fetch from a centralized user ledger if structured that way.
+            // For now, listing unpaid Udhaar orders.
+            db.collection('orders').where('customerPhone', '==', USER.phone).where('paymentMode', '==', 'Udhaar').get().then(snap => {
+                let total = 0;
+                let html = "";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.status !== 'cancelled') {
+                        total += d.totalAmount;
+                        html += `<div class="glass-card p-3 mb-2 flex justify-between"><span>${new Date(d.timestamp.toDate()).toLocaleDateString()}</span><span class="text-red-400 font-bold">-₹${d.totalAmount}</span></div>`;
+                    }
+                });
+                // Subtract payments (To implement fully, need 'payments' collection query by user phone)
+                document.getElementById('udhaar-list').innerHTML = `<div class="p-4 bg-red-900/20 rounded-xl mb-4 text-center"><p class="text-xs text-gray-400">Total Due</p><h1 class="text-3xl font-bold text-red-500">₹${total}</h1></div>` + html;
+            });
+        }
+
+        // --- UTILS ---
+        function switchTab(t) {
+            ['home','orders','udhaar'].forEach(x => {
+                document.getElementById('view-'+x).classList.add('hidden');
+                document.getElementById('nav-'+x).classList.remove('active');
+            });
+            document.getElementById('view-'+t).classList.remove('hidden');
+            document.getElementById('nav-'+t).classList.add('active');
+            
+            if(t === 'orders') loadMyOrders();
+            if(t === 'udhaar') loadUdhaar();
+        }
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; 
+        }
+
+        function shareApp() {
+            if(navigator.share) navigator.share({title: 'Nearby Bazar', text: 'Order from local shops!', url: window.location.href});
+        }
     </script>
 </body>
 </html>
