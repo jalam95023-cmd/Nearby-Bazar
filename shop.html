@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGMC Partner Dashboard</title>
+    <title>Vendor Partner - Nearby Bazar</title>
     <meta name="theme-color" content="#0f0f0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
@@ -16,12 +16,11 @@
     <style>
         /* --- PRO AESTHETICS --- */
         :root { --bg: #050505; --card: #141414; --border: #333; --accent: #F97316; --text: #fff; --text-sub: #9ca3af; --modal-bg: #050505; }
-        body.light-mode { --bg: #f3f4f6; --card: #ffffff; --border: #e5e7eb; --text: #111827; --text-sub: #4b5563; --modal-bg: #f9fafb; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
         
-        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: 0.3s; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
-        
+        /* Auth Screen */
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; padding: 24px; overflow-y: auto; }
-        .auth-input { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; width: 100%; border-radius: 12px; margin-bottom: 15px; outline: none; font-size: 16px; transition: 0.3s; }
+        .auth-input { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; width: 100%; border-radius: 12px; margin-bottom: 15px; outline: none; font-size: 16px; }
         .auth-input:focus { border-color: var(--accent); }
         
         .aesthetic-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 12px; position: relative; }
@@ -49,22 +48,22 @@
         .tab-btn { color: var(--text-sub); border-bottom: 2px solid transparent; transition: 0.3s; padding-bottom: 12px; flex: 1; text-align: center; cursor: pointer; }
         .tab-active { color: var(--accent); border-bottom: 2px solid var(--accent); font-weight: bold; }
 
-        /* Chat Styles */
-        .chat-row { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
-        .chat-row:active { background: rgba(255,255,255,0.05); }
-        .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; margin-bottom: 8px; font-size: 14px; }
-        .msg-me { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-other { background: #333; color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
-
-        /* Toast */
-        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 200; pointer-events: none; width: auto; }
-        .toast { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; padding: 10px 20px; border-radius: 30px; color: white; font-size: 12px; font-weight: bold; opacity: 0; transform: translateY(20px); transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); white-space: nowrap; }
-        .toast.show { opacity: 1; transform: translateY(0); }
+        /* Custom Toast (The Aesthetic Pill) */
+        #custom-toast { 
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); 
+            background: rgba(25, 25, 25, 0.95); backdrop-filter: blur(10px);
+            padding: 10px 24px; border-radius: 50px; border: 1px solid #333;
+            color: white; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999;
+            display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #custom-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #custom-toast i { color: var(--accent); }
     </style>
 </head>
 <body class="p-4 max-w-2xl mx-auto" onclick="enableAudio()">
 
-    <div id="auth-screen">
+    <div id="auth-screen" style="display:none;">
         <div class="text-center mb-10">
             <h1 class="text-4xl font-bold text-orange-500 mb-2">Nearby Bazar</h1>
             <p class="text-gray-500 text-sm tracking-widest uppercase">Partner Login</p>
@@ -168,9 +167,9 @@
         </div>
 
         <div id="tabs-section" class="flex mb-4 border-b border-gray-800" style="border-color:var(--border)">
-            <button onclick="switchView('live')" id="tab-live" class="tab-btn tab-active text-sm">LIVE</button>
-            <button onclick="switchView('history')" id="tab-history" class="tab-btn text-sm">HISTORY</button>
-            <button onclick="switchView('udhaar')" id="tab-udhaar" class="tab-btn text-sm">UDHAAR</button>
+            <button onclick="switchView('live')" id="tab-live" class="flex-1 py-3 tab-btn tab-active text-sm">LIVE</button>
+            <button onclick="switchView('history')" id="tab-history" class="flex-1 py-3 tab-btn text-sm">HISTORY</button>
+            <button onclick="switchView('udhaar')" id="tab-udhaar" class="flex-1 py-3 tab-btn text-sm">UDHAAR</button>
         </div>
 
         <div id="main-content">
@@ -202,8 +201,6 @@
 
     <div id="rewards-modal" class="fs-modal p-4"><div class="flex justify-between items-center mb-6"><h3 class="font-bold text-xl">Coupons</h3><button onclick="document.getElementById('rewards-modal').classList.remove('open')"><i class="fas fa-times"></i></button></div><div class="aesthetic-card"><h4 class="font-bold text-green-500 mb-2">Create Coupon</h4><input id="coup-code" placeholder="Code" class="uppercase"><input id="coup-amt" type="number" placeholder="Discount ₹"><div class="flex items-center gap-2 mb-4"><input type="checkbox" id="coup-new" class="w-4 h-4"><span class="text-sm">New Customers Only</span></div><button onclick="createCoupon()" class="w-full bg-green-600 py-2 rounded text-sm font-bold mb-4">Create</button><div id="coupons-list" class="space-y-2"></div></div></div>
 
-    <div id="coupon-stats-modal" class="hidden fixed inset-0 bg-black/95 z-[130] flex items-center justify-center p-4"><div class="aesthetic-card w-full max-w-sm h-[80vh] flex flex-col"><div class="flex justify-between mb-4 pb-2 border-b border-gray-700"><h3 class="font-bold text-lg">Stats</h3><button onclick="document.getElementById('coupon-stats-modal').classList.add('hidden')"><i class="fas fa-times"></i></button></div><div id="coupon-stats-list" class="overflow-y-auto flex-1 space-y-2"></div></div></div>
-
     <div id="menu-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm z-[130]"><div class="aesthetic-card w-full max-w-sm h-[80vh] flex flex-col"><div class="flex justify-between mb-4"><h3 class="font-bold text-xl">Inventory</h3><button onclick="document.getElementById('menu-modal').classList.add('hidden')"><i class="fas fa-times"></i></button></div><div id="menu-list-items" class="overflow-y-auto flex-1 mb-4 space-y-2"></div><div class="sticky-add-btn"><button onclick="openAddItemModal()" class="w-full bg-gradient-to-r from-orange-600 to-yellow-500 text-white py-3.5 rounded-xl font-bold shadow-xl flex items-center justify-center gap-2"><i class="fas fa-plus"></i> Add New Item</button></div></div></div>
     
     <div id="add-item-modal" class="popup-modal"><div class="aesthetic-card w-full max-w-xs p-6 relative"><h3 class="font-bold text-lg mb-4 text-center">Add Product</h3><input id="new-item-name" placeholder="Item Name" class="mb-3"><div class="flex gap-2 mb-3"><input id="new-item-price" type="number" placeholder="Price" class="flex-1"><input id="new-item-stock" type="number" placeholder="Stock" class="w-20"></div><div class="flex gap-2 mb-3"><select id="new-item-cat" class="flex-1 p-3 rounded bg-gray-900 border border-gray-700 text-white text-sm"></select><button onclick="openPrompt('New Category', 'Name', (val)=>{ if(val){ currentMenuData.categories.push(val); saveMenuStatus(); openAddItemModal(); } })" class="w-12 bg-gray-800 border border-gray-700 rounded text-white font-bold hover:bg-gray-700">+</button></div><input id="new-item-img" placeholder="Image Link" class="mb-4 text-xs"><div class="flex gap-2"><button onclick="document.getElementById('add-item-modal').classList.remove('open')" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-400 font-bold">Cancel</button><button onclick="saveNewItem()" class="flex-1 py-3 rounded-xl bg-orange-600 text-white font-bold">Save</button></div></div></div>
@@ -213,10 +210,7 @@
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#141414]">
                 <div class="flex items-center gap-3">
                     <button onclick="document.getElementById('chat-screen').classList.add('hidden')" class="text-gray-400"><i class="fas fa-arrow-left"></i></button>
-                    <div>
-                        <h3 class="font-bold text-white" id="chat-user-name">User</h3>
-                        <p class="text-[10px] text-green-500">Online</p>
-                    </div>
+                    <div><h3 class="font-bold text-white" id="chat-user-name">User</h3><p class="text-[10px] text-green-500">Online</p></div>
                 </div>
                 <a id="chat-call-btn" href="#" class="w-10 h-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center"><i class="fas fa-phone"></i></a>
             </div>
@@ -236,7 +230,8 @@
     <div id="settle-modal" class="hidden fixed inset-0 bg-black/90 z-[160] flex items-center justify-center p-4"><div class="aesthetic-card w-full max-w-sm"><h3 class="font-bold">Settle Payment</h3><p id="settle-name" class="text-gray-400 text-sm mb-4"></p><h1 class="text-4xl font-bold text-red-400 mb-4 text-center">₹<span id="settle-due">0</span></h1><input id="settle-amount" type="number" class="text-center text-xl font-bold mb-4" placeholder="Amount"><button onclick="submitPayment()" class="w-full bg-green-600 p-3 rounded font-bold text-white shadow-lg">Settle</button><button onclick="document.getElementById('settle-modal').classList.add('hidden')" class="w-full mt-3 text-gray-500">Cancel</button></div></div>
     <div id="limit-modal" class="hidden fixed inset-0 bg-black/90 z-[160] flex items-center justify-center p-4"><div class="aesthetic-card w-full max-w-sm"><h3 class="font-bold mb-4">Set Limit</h3><p id="limit-name" class="mb-2 text-gray-400"></p><input id="limit-input" type="number" placeholder="Amount"><button onclick="saveLimit()" class="w-full bg-purple-600 p-3 rounded font-bold text-white mt-4">Save</button><button onclick="document.getElementById('limit-modal').classList.add('hidden')" class="w-full mt-2 text-gray-500">Cancel</button></div></div>
 
-    <div id="toast-container"></div>
+    <div id="custom-toast"><i class="fas fa-check-circle"></i><span id="toast-msg">Notification</span></div>
+
     <audio id="order-sound"></audio>
 
     <script>
@@ -262,14 +257,13 @@
         const audioEl = document.getElementById('order-sound');
 
         // --- AUTH ---
-        function init() {
-            if(SHOP_ID) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-ui').classList.remove('hidden');
-                startListeners();
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
+        // LOGIN PERSISTENCE FIX
+        if(SHOP_ID) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-ui').classList.remove('hidden');
+            startListeners();
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
         }
 
         function toggleAuth(m) { document.getElementById('login-form').classList.toggle('hidden', m!=='login'); document.getElementById('register-form').classList.toggle('hidden', m!=='register'); }
@@ -293,12 +287,16 @@
                             if(d.exists && d.data().status === 'verified') {
                                 localStorage.setItem('nb_shop_id', id); SHOP_ID = id;
                                 document.getElementById('status-screen').classList.add('hidden');
-                                init();
+                                document.getElementById('app-ui').classList.remove('hidden');
+                                startListeners();
                             }
                         });
                         return;
                     }
-                    localStorage.setItem('nb_shop_id', id); SHOP_ID = id; init();
+                    localStorage.setItem('nb_shop_id', id); SHOP_ID = id; 
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app-ui').classList.remove('hidden');
+                    startListeners();
                 } else Swal.fire("Error","Invalid Login","error");
             }).catch(e => { btn.disabled = false; btn.innerText = "Login"; Swal.fire("Error",e.message,"error"); });
         }
@@ -317,16 +315,15 @@
             data.location = {lat, lng};
 
             db.collection('shops').doc(id).set(data).then(() => {
-                db.collection('shops').doc(id).collection('inventory').doc('placeholder').set({exists:true});
+                db.collection('shops').doc(id).collection('inventory').doc('placeholder').set({exists:true}); 
                 Swal.fire("Success","Request Sent! Wait for approval","success"); toggleAuth('login');
             }).catch(e => Swal.fire("Error",e.message,"error"));
         }
 
         function logout() { localStorage.removeItem('nb_shop_id'); location.reload(); }
 
-        // --- CORE LISTENERS ---
+        // --- LISTENERS ---
         function startListeners() {
-            // Settings
             db.collection('shops').doc(SHOP_ID).onSnapshot(d => { 
                 if(d.exists) { 
                     const s = d.data(); 
@@ -336,21 +333,18 @@
                 } 
             });
 
-            // Inventory
             db.collection('shops').doc(SHOP_ID).collection('inventory').onSnapshot(snap => { 
                 currentMenuData.customItems = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 if(!currentMenuData.categories) currentMenuData.categories = ['Chai', 'Snacks', 'Sutta'];
                 if(!document.getElementById('menu-modal').classList.contains('hidden')) renderInventory();
             });
 
-            // Limits
             db.collection('shops').doc(SHOP_ID).collection('user_limits').onSnapshot(s => { 
                 limitsMap = {}; 
                 s.docs.forEach(d => limitsMap[d.id] = d.data().limit); 
                 if (!document.getElementById('view-udhaar').classList.contains('hidden')) renderUdhaar(); 
             });
 
-            // Chats
             db.collection('shops').doc(SHOP_ID).collection('chats').onSnapshot(snap => {
                 chatUsers = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 const hasMsg = chatUsers.length > 0;
@@ -358,41 +352,27 @@
                 if (!document.getElementById('view-messages').classList.contains('hidden')) renderMessagesList();
             });
 
-            // Orders
             db.collection('orders').where('shopId', '==', SHOP_ID).orderBy('timestamp', 'desc').onSnapshot(snap => {
                 allOrders = []; udhaarMap = {}; todaysItemsMap = {}; todaysOrderCount = 0; let sales = 0, active = 0, hasPending=false;
-                
                 snap.forEach(doc => {
                     const d = doc.data(); d.id = doc.id; allOrders.push(d);
-                    
                     if(d.paymentMode === 'Udhaar' && d.status !== 'cancelled') {
                         if (!udhaarMap[d.customerPhone]) udhaarMap[d.customerPhone] = {name: d.customerName, debit: 0, credit: 0};
                         udhaarMap[d.customerPhone].debit += d.totalAmount;
                     }
-
-                    if(d.status === 'completed') {
-                        sales += d.totalAmount; todaysOrderCount++;
-                        d.items.forEach(i => { todaysItemsMap[i.name] = (todaysItemsMap[i.name]||0) + i.qty; });
-                    }
-
+                    if(d.status === 'completed') { sales += d.totalAmount; todaysOrderCount++; d.items.forEach(i => { todaysItemsMap[i.name] = (todaysItemsMap[i.name]||0) + i.qty; }); }
                     if(['pending','cooking','ready'].includes(d.status)) active++;
                     if(d.status === 'pending' && (d.timestamp?.seconds > (Date.now()/1000 - 300))) hasPending = true;
                 });
-
                 document.getElementById('pending-count').innerText = active;
                 document.getElementById('total-sales').innerText = sales;
                 document.getElementById('total-sales').dataset.realValue = sales;
-                
                 if(hasPending) playAlarm();
                 render(); 
             });
             
-            // Payments
             db.collection('payments').where('shopId', '==', SHOP_ID).onSnapshot(s => {
-                s.docs.forEach(d => {
-                    const p = d.data();
-                    if(udhaarMap[p.phone]) udhaarMap[p.phone].credit += p.amount;
-                });
+                s.docs.forEach(d => { const p = d.data(); if(udhaarMap[p.phone]) udhaarMap[p.phone].credit += p.amount; });
                 render();
             });
         }
@@ -415,49 +395,35 @@
             if(!document.getElementById('view-udhaar').classList.contains('hidden')) renderUdhaar();
         }
 
-        // --- ORDER MODAL ---
         function openFullModal(id) {
             currentOpenOrder = allOrders.find(o => o.id === id); if(!currentOpenOrder) return;
             const d = currentOpenOrder;
             document.getElementById('fm-name').innerText = d.customerName; document.getElementById('fm-phone').innerText = d.customerPhone; document.getElementById('fm-status-badge').innerText = d.status;
             document.getElementById('fm-payment-info').innerHTML = `<span class="pay-badge ${d.paymentMode==='Udhaar'?'pay-udhaar':'pay-cash'}">${d.paymentMode}</span>`;
-            
             if(d.coupon) { document.getElementById('fm-coupon-box').classList.remove('hidden'); document.getElementById('fm-coupon-box').classList.add('flex'); document.getElementById('fm-coupon-code').innerText = d.coupon.code; document.getElementById('fm-coupon-amt').innerText = d.coupon.discount; } else document.getElementById('fm-coupon-box').classList.add('hidden');
             if (d.recipient) { document.getElementById('fm-recipient-box').classList.remove('hidden'); document.getElementById('fm-recipient').innerText = `${d.recipient.name} (${d.recipient.phone})`; } else document.getElementById('fm-recipient-box').classList.add('hidden');
-            
             document.getElementById('fm-items-list').innerHTML = d.items.map((i,idx) => `<div class="flex justify-between items-center p-2 rounded bg-gray-800/30 border border-gray-700"><div class="flex-1"><span class="text-sm font-bold">${i.name}</span></div><div class="flex items-center gap-3"><span class="text-sm font-bold text-orange-400 w-4 text-center">${i.qty}</span></div></div>`).join('');
             document.getElementById('fm-total').innerText = d.totalAmount;
-            
             const callPh = d.recipient ? d.recipient.phone : d.customerPhone; 
-            document.getElementById('fm-btn-call').href = `tel:${callPh}`; 
-            document.getElementById('fm-btn-wa').href = `https://wa.me/${callPh.replace(/\D/g, '')}`;
+            document.getElementById('fm-btn-call').href = `tel:${callPh}`; document.getElementById('fm-btn-wa').href = `https://wa.me/${callPh.replace(/\D/g, '')}`;
             document.getElementById('fm-btn-map').href = d.customerCoordinates ? `https://www.google.com/maps?q=${d.customerCoordinates.lat},${d.customerCoordinates.lng}` : "#";
-
-            document.getElementById('fm-controls').innerHTML = `
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="updStatus('pending')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Pending</button>
-                    <button onclick="updStatus('cooking')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Cooking</button>
-                    <button onclick="updStatus('ready')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Ready</button>
-                    <button onclick="updStatus('completed')" class="p-2 rounded bg-green-600 text-white text-[10px] font-bold">Done</button>
-                </div>
-                <button onclick="deleteOrder()" class="w-full py-3 text-red-500 text-xs font-bold mt-4 border border-red-900/30 rounded-xl hover:bg-red-900/10"><i class="fas fa-trash mr-1"></i> DELETE ORDER</button>`;
-            
+            document.getElementById('fm-controls').innerHTML = `<div class="grid grid-cols-4 gap-2"><button onclick="updStatus('pending')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Pending</button><button onclick="updStatus('cooking')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Cooking</button><button onclick="updStatus('ready')" class="p-2 rounded bg-gray-700 text-white text-[10px] font-bold">Ready</button><button onclick="updStatus('completed')" class="p-2 rounded bg-green-600 text-white text-[10px] font-bold">Done</button></div><button onclick="deleteOrder()" class="w-full py-3 text-red-500 text-xs font-bold mt-4 border border-red-900/30 rounded-xl hover:bg-red-900/10"><i class="fas fa-trash mr-1"></i> DELETE ORDER</button>`;
             document.getElementById('order-full-modal').classList.add('open');
         }
-        function updStatus(s) { db.collection('orders').doc(currentOpenOrder.id).update({status: s}).then(() => { document.getElementById('order-full-modal').classList.remove('open'); showToast("Updated"); }); }
+        function updStatus(s) { db.collection('orders').doc(currentOpenOrder.id).update({status: s}).then(() => { document.getElementById('order-full-modal').classList.remove('open'); showPillToast("Status Updated"); }); }
         function closeFullModal() { document.getElementById('order-full-modal').classList.remove('open'); }
         function deleteOrder() { 
-            document.getElementById('confirm-title').innerText = "Delete Permanently?"; 
-            document.getElementById('custom-confirm').classList.add('open'); 
-            pendingAction = () => { db.collection('orders').doc(currentOpenOrder.id).delete().then(() => { closeFullModal(); showToast("Deleted"); }); };
+            Swal.fire({title:'Delete?', icon:'warning', showCancelButton:true}).then(r=>{ 
+                if(r.isConfirmed) db.collection('orders').doc(currentOpenOrder.id).delete().then(() => { closeFullModal(); showPillToast("Deleted"); }); 
+            });
         }
 
-        // --- INVENTORY ---
+        // --- INVENTORY FIX ---
         function renderInventory() {
             document.getElementById('menu-list-items').innerHTML = currentMenuData.customItems.map((i) => `<div class="aesthetic-card flex justify-between items-center p-3 mb-2">
                 <div class="flex items-center gap-3">
                     ${i.image?`<img src="${i.image}" class="item-thumb">`:''}
-                    <div><span class="font-bold text-white block ${!i.available ? 'opacity-50 line-through' : ''}">${i.name}</span><span class="text-xs text-orange-400">₹${i.price} | Stock: ${i.stock||0} <button onclick="addStock('${i.id}', 10)" class="ml-1 text-green-400 font-bold bg-green-900/50 px-1 rounded">+</button></span></div>
+                    <div><span class="font-bold text-white block ${!i.available ? 'opacity-50 line-through' : ''}">${i.name}</span><span class="text-xs text-orange-400">₹${i.price} | Stock: ${i.stock||0} <button onclick="triggerAddStock('${i.id}')" class="ml-1 text-green-400 font-bold bg-green-900/50 px-2 rounded">+</button></span></div>
                 </div>
                 <div class="flex items-center gap-4">
                     <i onclick="toggleItemAvail('${i.id}', ${!i.available})" class="fas ${i.available?'fa-check-circle text-green-500':'fa-times-circle text-red-500'} text-xl cursor-pointer"></i>
@@ -466,57 +432,48 @@
         }
         function openMenuControl() { document.getElementById('menu-modal').classList.remove('hidden'); renderInventory(); }
         function openAddItemModal() { document.getElementById('add-item-modal').classList.add('open'); document.getElementById('new-item-name').value=''; document.getElementById('new-item-price').value=''; document.getElementById('new-item-stock').value=''; document.getElementById('new-item-img').value=''; const s = document.getElementById('new-item-cat'); s.innerHTML = currentMenuData.categories.map(c => `<option value="${c}">${c}</option>`).join(''); }
-        function saveNewItem() { const n=document.getElementById('new-item-name').value, p=parseInt(document.getElementById('new-item-price').value), s=parseInt(document.getElementById('new-item-stock').value), c=document.getElementById('new-item-cat').value, img=document.getElementById('new-item-img').value; if(n&&p){ db.collection('shops').doc(SHOP_ID).collection('inventory').add({name:n, price:p, category:c||'Chai', available:true, stock:s||99, image:img}); document.getElementById('add-item-modal').classList.remove('open'); showToast("Added"); } }
+        function saveNewItem() { const n=document.getElementById('new-item-name').value, p=parseInt(document.getElementById('new-item-price').value), s=parseInt(document.getElementById('new-item-stock').value), c=document.getElementById('new-item-cat').value, img=document.getElementById('new-item-img').value; if(n&&p){ db.collection('shops').doc(SHOP_ID).collection('inventory').add({name:n, price:p, category:c||'Chai', available:true, stock:s||99, image:img}); document.getElementById('add-item-modal').classList.remove('open'); showPillToast("Added"); } }
         function toggleItemAvail(id, val) { db.collection('shops').doc(SHOP_ID).collection('inventory').doc(id).update({available: val}); }
-        function addStock(id, val) { db.collection('shops').doc(SHOP_ID).collection('inventory').doc(id).update({stock: firebase.firestore.FieldValue.increment(val)}); }
+        // NEW STOCK ADD LOGIC
+        async function triggerAddStock(id) {
+            const { value: qty } = await Swal.fire({ title: 'Add Stock', input: 'number', inputValue: 10, showCancelButton: true });
+            if (qty) { db.collection('shops').doc(SHOP_ID).collection('inventory').doc(id).update({stock: firebase.firestore.FieldValue.increment(parseInt(qty))}); showPillToast(`Added ${qty}`); }
+        }
         function delItem(id) { db.collection('shops').doc(SHOP_ID).collection('inventory').doc(id).delete(); }
         
         // --- MESSAGING ---
-        function renderMessagesList() {
-            const list = document.getElementById('messages-list');
-            list.innerHTML = chatUsers.map(u => `<div class="chat-row" onclick="openChat('${u.id}', '${udhaarMap[u.id]?.name || u.id}')"><div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center mr-3"><i class="fas fa-user"></i></div><div><p class="font-bold text-sm text-white">${udhaarMap[u.id]?.name || "Guest"}</p><p class="text-xs text-gray-500">${u.lastMsg || 'Tap to chat'}</p></div></div>`).join('');
-        }
-        function openChat(phone, name) {
-            currentChatUser = phone;
-            document.getElementById('chat-user-name').innerText = name;
-            document.getElementById('chat-call-btn').href = `tel:${phone}`;
-            document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('view-messages').classList.add('hidden');
-            
-            db.collection('shops').doc(SHOP_ID).collection('chats').doc(phone).collection('messages').orderBy('timestamp').onSnapshot(snap => {
-                document.getElementById('chat-bubbles').innerHTML = snap.docs.map(d => `<div class="chat-bubble ${d.data().sender === 'admin' ? 'msg-me' : 'msg-other'}">${d.data().text}</div>`).join('');
-            });
-        }
-        function sendMessage() {
-            const t = document.getElementById('chat-input').value.trim();
-            if (t && currentChatUser) {
-                db.collection('shops').doc(SHOP_ID).collection('chats').doc(currentChatUser).collection('messages').add({ text: t, sender: 'admin', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                db.collection('shops').doc(SHOP_ID).collection('chats').doc(currentChatUser).set({lastMsg: t}, {merge: true});
-                document.getElementById('chat-input').value = "";
-            }
-        }
+        function renderMessagesList() { const list = document.getElementById('messages-list'); list.innerHTML = chatUsers.map(u => `<div class="chat-row" onclick="openChat('${u.id}', '${udhaarMap[u.id]?.name || u.id}')"><div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center mr-3"><i class="fas fa-user"></i></div><div><p class="font-bold text-sm text-white">${udhaarMap[u.id]?.name || "Guest"}</p><p class="text-xs text-gray-500">${u.lastMsg || 'Tap to chat'}</p></div></div>`).join(''); }
+        function openChat(phone, name) { currentChatUser = phone; document.getElementById('chat-user-name').innerText = name; document.getElementById('chat-call-btn').href = `tel:${phone}`; document.getElementById('chat-screen').classList.remove('hidden'); document.getElementById('view-messages').classList.add('hidden'); db.collection('shops').doc(SHOP_ID).collection('chats').doc(phone).collection('messages').orderBy('timestamp').onSnapshot(snap => { document.getElementById('chat-bubbles').innerHTML = snap.docs.map(d => `<div class="chat-bubble ${d.data().sender === 'admin' ? 'msg-me' : 'msg-other'}">${d.data().text}</div>`).join(''); }); }
+        function sendMessage() { const t = document.getElementById('chat-input').value.trim(); if (t && currentChatUser) { db.collection('shops').doc(SHOP_ID).collection('chats').doc(currentChatUser).collection('messages').add({ text: t, sender: 'admin', timestamp: firebase.firestore.FieldValue.serverTimestamp() }); db.collection('shops').doc(SHOP_ID).collection('chats').doc(currentChatUser).set({lastMsg: t}, {merge: true}); document.getElementById('chat-input').value = ""; } }
 
         // --- DELIVERY & REWARDS ---
         function openDeliverySettings() { db.collection('shops').doc(SHOP_ID).get().then(d => { const s = d.data().settings||{}; document.getElementById('del-min').value=s.minOrder||0; document.getElementById('del-charge').value=s.deliveryCharge||0; document.getElementById('del-free').value=s.freeDeliveryAbove||0; document.getElementById('delivery-modal').classList.add('open'); }); }
-        function saveDeliverySettings() { const s = { minOrder: parseInt(document.getElementById('del-min').value), deliveryCharge: parseInt(document.getElementById('del-charge').value), freeDeliveryAbove: parseInt(document.getElementById('del-free').value) }; db.collection('shops').doc(SHOP_ID).set({settings: s}, {merge:true}); document.getElementById('delivery-modal').classList.remove('open'); showToast("Saved"); }
-        
+        function saveDeliverySettings() { const s = { minOrder: parseInt(document.getElementById('del-min').value), deliveryCharge: parseInt(document.getElementById('del-charge').value), freeDeliveryAbove: parseInt(document.getElementById('del-free').value) }; db.collection('shops').doc(SHOP_ID).set({settings: s}, {merge:true}); document.getElementById('delivery-modal').classList.remove('open'); showPillToast("Saved"); }
         function openRewardsModal() { renderCoupons(); document.getElementById('rewards-modal').classList.add('open'); }
-        function createCoupon() { const code = document.getElementById('coup-code').value.trim().toUpperCase(), amt = parseInt(document.getElementById('coup-amt').value), isNew = document.getElementById('coup-new').checked; if(code && amt) { db.collection('shops').doc(SHOP_ID).collection('coupons').doc(code).set({code, discount:amt, newCustomerOnly:isNew}); showToast("Created"); renderCoupons(); } }
+        function createCoupon() { const code = document.getElementById('coup-code').value.trim().toUpperCase(), amt = parseInt(document.getElementById('coup-amt').value), isNew = document.getElementById('coup-new').checked; if(code && amt) { db.collection('shops').doc(SHOP_ID).collection('coupons').doc(code).set({code, discount:amt, newCustomerOnly:isNew}); showPillToast("Created"); renderCoupons(); } }
         function renderCoupons() { db.collection('shops').doc(SHOP_ID).collection('coupons').get().then(s => { document.getElementById('coupons-list').innerHTML = s.docs.map(d => `<div class="flex justify-between items-center bg-gray-800 p-2 rounded border border-gray-700 mt-2"><span class="text-sm font-bold text-white">${d.id} <span class="text-orange-400">₹${d.data().discount}</span></span><button onclick="db.collection('shops').doc('${SHOP_ID}').collection('coupons').doc('${d.id}').delete().then(()=>renderCoupons())" class="text-red-500"><i class="fas fa-trash"></i></button></div>`).join(''); }); }
 
-        // --- UDHAAR & LIMITS ---
+        // --- UDHAAR ---
         function openLimitModal(p, n){ currentLimitPhone = p; document.getElementById('limit-name').innerText = n; document.getElementById('limit-input').value = ''; document.getElementById('limit-modal').classList.add('open'); }
-        function saveLimit(){ db.collection('shops').doc(SHOP_ID).collection('user_limits').doc(currentLimitPhone).set({limit: parseInt(document.getElementById('limit-input').value)}, {merge: true}); document.getElementById('limit-modal').classList.remove('open'); showToast("Saved"); }
+        function saveLimit(){ db.collection('shops').doc(SHOP_ID).collection('user_limits').doc(currentLimitPhone).set({limit: parseInt(document.getElementById('limit-input').value)}, {merge: true}); document.getElementById('limit-modal').classList.remove('open'); showPillToast("Saved"); }
         function renderUdhaar() { const list = document.getElementById('udhaar-list'), q = document.getElementById('search-udhaar').value.toLowerCase(); let h = ''; for(let ph in udhaarMap) { const d = udhaarMap[ph].debit - (udhaarMap[ph].credit||0); if(d>0 && udhaarMap[ph].name.toLowerCase().includes(q)) h += `<div class="aesthetic-card p-3 mb-2"><div class="flex justify-between items-start mb-2"><div><div class="flex gap-2 items-center"><p class="font-bold text-white">${udhaarMap[ph].name}</p><i class="fas fa-lock text-gray-500 cursor-pointer text-xs hover:text-white" onclick="openLimitModal('${ph}','${udhaarMap[ph].name}')"></i></div><p class="text-xs opacity-50">${ph}</p></div><div class="text-right"><p class="font-bold text-red-400">₹${d}</p><button onclick="openSettle('${ph}','${udhaarMap[ph].name}',${d})" class="bg-blue-600 px-3 py-1 rounded text-xs text-white mt-1 font-bold">SETTLE</button></div></div></div>`; } list.innerHTML = h; }
         
         // --- UTILS ---
         function toggleShopStatus() { const btn = document.getElementById('shop-toggle-btn'), isOpen = btn.innerText === "OPEN"; db.collection('shops').doc(SHOP_ID).update({isOpen: !isOpen}); }
         function updateShopStatusUI(isOpen) { const btn = document.getElementById('shop-toggle-btn'); btn.innerText = isOpen ? "OPEN" : "CLOSED"; btn.className = isOpen ? "px-3 py-1 rounded text-xs font-bold bg-green-600 text-white shadow" : "px-3 py-1 rounded text-xs font-bold bg-red-600 text-white shadow"; }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open'); }
-        function showToast(msg, type='info') { Swal.mixin({toast: true, position: 'bottom', showConfirmButton: false, timer: 3000}).fire({icon: type, title: msg}); }
+        
+        // New Aesthetic Toast
+        function showPillToast(msg) { 
+            const t = document.getElementById('custom-toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
         function enableAudio() { if(!soundEnabled) { soundEnabled = true; updateSoundUI(); } if(isRinging) { audioEl.pause(); audioEl.currentTime=0; isRinging=false; updateSoundUI(); } }
         function playAlarm() { if(soundEnabled && !isRinging) { audioEl.src = "https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3"; audioEl.loop = true; audioEl.play().catch(e=>{}); isRinging=true; updateSoundUI(); } }
-        function toggleSound() { soundEnabled = !soundEnabled; updateSoundUI(); showToast(soundEnabled?"Sound ON":"Sound MUTED", "warning"); }
+        function toggleSound() { soundEnabled = !soundEnabled; updateSoundUI(); showPillToast(soundEnabled?"Sound ON":"Sound MUTED"); }
         function updateSoundUI() { const txt = soundEnabled?"ON":"OFF"; document.getElementById('sound-status').innerText = isRinging?"RINGING!":"Sound: "+txt; document.getElementById('sidebar-sound-status').innerText = txt; }
         function switchView(v) { 
             ['live','history','udhaar','messages'].forEach(x => { document.getElementById('view-'+x).classList.add('hidden'); }); 
@@ -529,19 +486,17 @@
             if(v==='history') renderHistory(); if(v==='udhaar') renderUdhaar(); if(v==='messages') renderMessagesList();
         }
         function renderHistory() { const list = document.getElementById('history-list'), q = document.getElementById('search-history').value.toLowerCase(); list.innerHTML = allOrders.filter(o => ['completed','rejected'].includes(o.status) && o.customerName.toLowerCase().includes(q)).map(o => `<div class="aesthetic-card p-3 flex justify-between"><div><span class="font-bold block">${o.customerName}</span><span class="text-xs text-gray-500">${new Date(o.timestamp.toDate()).toLocaleDateString()}</span></div><div class="text-right"><span class="font-bold block text-orange-400">₹${o.totalAmount}</span><span class="text-[10px] uppercase font-bold ${o.status==='completed'?'text-green-500':'text-red-500'}">${o.status}</span></div></div>`).join(''); }
-        function setShopLocation() { showToast("Detecting...", "info"); navigator.geolocation.getCurrentPosition(p => { db.collection('shops').doc(SHOP_ID).update({location: {lat: p.coords.latitude, lng: p.coords.longitude}}).then(() => showToast("Location Updated!")); }, e => showToast("Error: " + e.message, "error")); }
+        function setShopLocation() { showPillToast("Detecting..."); navigator.geolocation.getCurrentPosition(p => { db.collection('shops').doc(SHOP_ID).update({location: {lat: p.coords.latitude, lng: p.coords.longitude}}).then(() => showPillToast("Location Updated!")); }, e => showPillToast("Error")); }
         function openSalesAnalysis(){ document.getElementById('sales-modal').classList.remove('hidden'); document.getElementById('an-sales').innerText = document.getElementById('total-sales').dataset.realValue; document.getElementById('an-count').innerText = todaysOrderCount; document.getElementById('today-breakdown-list').innerHTML = Object.entries(todaysItemsMap).map(([n, q]) => `<div class="flex justify-between p-2 border-b border-gray-800"><span class="text-white text-sm">${n}</span><span class="text-orange-400 font-bold">${q}</span></div>`).join(''); }
         function openPrompt(t,p,c){ document.getElementById('prompt-title').innerText=t; document.getElementById('prompt-input').placeholder=p; document.getElementById('custom-prompt').classList.add('open'); promptCallback=c; }
         let promptCallback = null; document.getElementById('prompt-confirm-btn').onclick = () => { if(promptCallback) promptCallback(document.getElementById('prompt-input').value); document.getElementById('custom-prompt').classList.remove('open'); };
         function openSettle(p, n, d){ currentSettlePhone = p; document.getElementById('settle-name').innerText = n; document.getElementById('settle-due').innerText = d; document.getElementById('settle-amount').value = ''; document.getElementById('settle-modal').classList.add('open'); }
-        function submitPayment(){ const a = parseInt(document.getElementById('settle-amount').value); if (a) db.collection('payments').add({phone: currentSettlePhone, amount: a, shopId: SHOP_ID, timestamp: firebase.firestore.FieldValue.serverTimestamp()}); document.getElementById('settle-modal').classList.remove('open'); showToast("Settled", "success"); }
+        function submitPayment(){ const a = parseInt(document.getElementById('settle-amount').value); if (a) db.collection('payments').add({phone: currentSettlePhone, amount: a, shopId: SHOP_ID, timestamp: firebase.firestore.FieldValue.serverTimestamp()}); document.getElementById('settle-modal').classList.remove('open'); showPillToast("Settled"); }
         function openPaymentLogs(){ const l = document.getElementById('logs-list'); db.collection('payments').where('shopId','==',SHOP_ID).orderBy('timestamp','desc').get().then(s => { l.innerHTML = s.docs.map(d=> `<div class="aesthetic-card p-3 mb-2 flex justify-between"><span>${d.data().phone}</span><span class="text-green-400">+₹${d.data().amount}</span></div>`).join(''); }); document.getElementById('logs-modal').classList.remove('hidden'); }
         function toggleTheme() { document.body.classList.toggle('light-mode'); document.getElementById('theme-icon').className = document.body.classList.contains('light-mode') ? "fas fa-toggle-off text-gray-400" : "fas fa-toggle-on text-purple-500"; }
 
         // Window Exports
-        window.handleLogin = handleLogin; window.handleRegister = handleRegister; window.toggleAuth = toggleAuth; window.logout = logout; window.toggleShopStatus = toggleShopStatus; window.toggleSound = toggleSound; window.openDeliverySettings = openDeliverySettings; window.saveDeliverySettings = saveDeliverySettings; window.openRewardsModal = openRewardsModal; window.saveWheelSettings = saveWheelSettings; window.createCoupon = createCoupon; window.openCouponStats = openCouponStats; window.switchView = switchView; window.openMenuControl = openMenuControl; window.openAddItemModal = openAddItemModal; window.saveNewItem = saveNewItem; window.openPaymentLogs = openPaymentLogs; window.toggleTheme = toggleTheme; window.setShopLocation = setShopLocation; window.openSalesAnalysis = openSalesAnalysis; window.toggleSidebar = toggleSidebar; window.closeFullModal = closeFullModal; window.updateStatus = updStatus; window.deleteOrder = deleteOrder; window.openLimitModal = openLimitModal; window.saveLimit = saveLimit; window.openSettle = openSettle; window.submitPayment = submitPayment; window.openPrompt = openPrompt; window.toggleItemAvail = toggleItemAvail; window.delItem = delItem; window.addStock = addStock; window.openFullModal = openFullModal; window.openChat = openChat; window.sendMessage = sendMessage; window.closeChatWindow = () => document.getElementById('chat-screen').classList.add('hidden');
-
-        init();
+        window.handleLogin = handleLogin; window.handleRegister = handleRegister; window.toggleAuth = toggleAuth; window.logout = logout; window.toggleShopStatus = toggleShopStatus; window.toggleSound = toggleSound; window.openDeliverySettings = openDeliverySettings; window.saveDeliverySettings = saveDeliverySettings; window.openRewardsModal = openRewardsModal; window.createCoupon = createCoupon; window.switchView = switchView; window.openMenuControl = openMenuControl; window.openAddItemModal = openAddItemModal; window.saveNewItem = saveNewItem; window.openPaymentLogs = openPaymentLogs; window.toggleTheme = toggleTheme; window.setShopLocation = setShopLocation; window.openSalesAnalysis = openSalesAnalysis; window.toggleSidebar = toggleSidebar; window.closeFullModal = closeFullModal; window.updateStatus = updStatus; window.deleteOrder = deleteOrder; window.openLimitModal = openLimitModal; window.saveLimit = saveLimit; window.openSettle = openSettle; window.submitPayment = submitPayment; window.openPrompt = openPrompt; window.toggleItemAvail = toggleItemAvail; window.delItem = delItem; window.triggerAddStock = triggerAddStock; window.openFullModal = openFullModal; window.openChat = openChat; window.sendMessage = sendMessage; window.closeChatWindow = () => document.getElementById('chat-screen').classList.add('hidden');
     </script>
 </body>
 </html>
