@@ -1,20 +1,58 @@
-{
-  "name": "Nearby Bazar Admin",
-  "short_name": "NB Admin",
-  "start_url": "admin.html",
-  "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/869/869636.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/869/869636.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+diff --git a/features.json b/features.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d309b137afd69d2ccb0bd2ab5970ee24fa9155aa
+--- /dev/null
++++ b/features.json
+@@ -0,0 +1,52 @@
++[
++  {"id": 1, "title": "Instant Shop Discovery", "description": "See verified shops as soon as you open the app.", "category": "Discovery", "status": "live"},
++  {"id": 2, "title": "Distance-Based Sorting", "description": "Automatically rank shops by how close they are to you.", "category": "Discovery", "status": "live"},
++  {"id": 3, "title": "Open/Closed Badges", "description": "Know which shops are currently accepting orders.", "category": "Discovery", "status": "live"},
++  {"id": 4, "title": "Category Grouped Menus", "description": "Menus are grouped by category for faster browsing.", "category": "Discovery", "status": "live"},
++  {"id": 5, "title": "Stock Visibility", "description": "Check available stock before adding items.", "category": "Discovery", "status": "live"},
++  {"id": 6, "title": "Featured Shop Highlights", "description": "Spot highlighted partner stores with premium labels.", "category": "Discovery", "status": "beta"},
++  {"id": 7, "title": "Quick Shop Search", "description": "Find shops by name instantly.", "category": "Discovery", "status": "beta"},
++  {"id": 8, "title": "Saved Shop Shortcuts", "description": "Pin your favorite shops to the top of the list.", "category": "Discovery", "status": "planned"},
++  {"id": 9, "title": "Shop Operating Hours", "description": "View store hours before placing an order.", "category": "Discovery", "status": "planned"},
++  {"id": 10, "title": "Shop Location Tips", "description": "Helpful directions on how to reach the store.", "category": "Discovery", "status": "planned"},
++  {"id": 11, "title": "Smart Cart Summary", "description": "Always see your cart total at a glance.", "category": "Orders", "status": "live"},
++  {"id": 12, "title": "Quantity Stepper", "description": "Add or remove items quickly from the menu.", "category": "Orders", "status": "live"},
++  {"id": 13, "title": "Order History", "description": "Access your past orders anytime.", "category": "Orders", "status": "live"},
++  {"id": 14, "title": "Order Detail View", "description": "Inspect itemized totals and statuses.", "category": "Orders", "status": "live"},
++  {"id": 15, "title": "Delivery Charge Breakdown", "description": "Understand delivery fees before checkout.", "category": "Orders", "status": "live"},
++  {"id": 16, "title": "Quick Reorder", "description": "Recreate past orders with one tap.", "category": "Orders", "status": "planned"},
++  {"id": 17, "title": "Order Notes", "description": "Add instructions for the shop or rider.", "category": "Orders", "status": "planned"},
++  {"id": 18, "title": "Split Cart Suggestions", "description": "Get tips when items belong to different stores.", "category": "Orders", "status": "planned"},
++  {"id": 19, "title": "Scheduled Orders", "description": "Place an order ahead of time.", "category": "Orders", "status": "planned"},
++  {"id": 20, "title": "Delivery ETA", "description": "Get an estimated delivery time.", "category": "Orders", "status": "planned"},
++  {"id": 21, "title": "Cash Payments", "description": "Pay with cash on delivery.", "category": "Payments", "status": "live"},
++  {"id": 22, "title": "UPI Payments", "description": "Pay instantly via UPI.", "category": "Payments", "status": "live"},
++  {"id": 23, "title": "Credit Tab", "description": "Use shop-approved credit for repeat orders.", "category": "Payments", "status": "live"},
++  {"id": 24, "title": "Promo Codes", "description": "Apply discount codes at checkout.", "category": "Payments", "status": "planned"},
++  {"id": 25, "title": "Wallet Balance", "description": "Store refunds and credits in a wallet.", "category": "Payments", "status": "planned"},
++  {"id": 26, "title": "Split Payments", "description": "Pay with multiple methods in one order.", "category": "Payments", "status": "planned"},
++  {"id": 27, "title": "Tip the Rider", "description": "Add a gratuity during checkout.", "category": "Payments", "status": "planned"},
++  {"id": 28, "title": "Digital Receipts", "description": "Download and share your order invoices.", "category": "Payments", "status": "planned"},
++  {"id": 29, "title": "Secure Admin Panel", "description": "Password-protected admin experience.", "category": "Safety", "status": "live"},
++  {"id": 30, "title": "Phone Validation", "description": "Validate phone numbers before login.", "category": "Safety", "status": "live"},
++  {"id": 31, "title": "Input Sanitization", "description": "Protect against unsafe user inputs.", "category": "Safety", "status": "live"},
++  {"id": 32, "title": "Fraud Alerts", "description": "Detect unusual order activity.", "category": "Safety", "status": "planned"},
++  {"id": 33, "title": "Device Verification", "description": "Secure login with device checks.", "category": "Safety", "status": "planned"},
++  {"id": 34, "title": "Saved Addresses", "description": "Store multiple delivery addresses.", "category": "Personalization", "status": "planned"},
++  {"id": 35, "title": "Order Preferences", "description": "Remember your default payment choice.", "category": "Personalization", "status": "beta"},
++  {"id": 36, "title": "Language Selection", "description": "Switch the app language easily.", "category": "Personalization", "status": "planned"},
++  {"id": 37, "title": "Dark Theme", "description": "Enjoy a comfortable dark interface.", "category": "Personalization", "status": "live"},
++  {"id": 38, "title": "Diet Filters", "description": "Filter menus by dietary preference.", "category": "Personalization", "status": "planned"},
++  {"id": 39, "title": "Personalized Offers", "description": "Get offers based on your order history.", "category": "Personalization", "status": "planned"},
++  {"id": 40, "title": "Neighborhood Deals", "description": "See offers curated for your area.", "category": "Community", "status": "planned"},
++  {"id": 41, "title": "Live Order Support", "description": "Reach support quickly for active orders.", "category": "Support", "status": "planned"},
++  {"id": 42, "title": "Chat with Shop", "description": "Message shops about your order.", "category": "Support", "status": "planned"},
++  {"id": 43, "title": "Feedback Collection", "description": "Rate your experience after delivery.", "category": "Support", "status": "planned"},
++  {"id": 44, "title": "Issue Reporting", "description": "Report missing or incorrect items.", "category": "Support", "status": "planned"},
++  {"id": 45, "title": "Fast Menu Loading", "description": "Optimized menu fetching for speed.", "category": "Speed", "status": "live"},
++  {"id": 46, "title": "Offline Mode", "description": "Browse cached menus when offline.", "category": "Speed", "status": "planned"},
++  {"id": 47, "title": "Push Notifications", "description": "Get real-time order updates.", "category": "Speed", "status": "planned"},
++  {"id": 48, "title": "Loyalty Rewards", "description": "Earn points for every order.", "category": "Rewards", "status": "planned"},
++  {"id": 49, "title": "Referral Bonuses", "description": "Invite friends and earn credits.", "category": "Rewards", "status": "planned"},
++  {"id": 50, "title": "High-Contrast Mode", "description": "Improved readability for accessibility.", "category": "Accessibility", "status": "planned"}
++]
